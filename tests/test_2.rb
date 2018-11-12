@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+$LOAD_PATH << './lib'
+
+require 'smallq/client'
+
+c = Smallq::Client.new('localhost', 2000)
+
+puts 'Make sure the server is running'
+puts '-------------------------------'
+
+MESSAGES = %w(First Second Third Fourth Fifth Sixth Seveth Eight Ninth Tenth)
+
+puts "Sending #{MESSAGES.size} messages"
+
+MESSAGES.each do |message|
+  r = c.add(message)
+
+  if r.size != 2
+    puts "Incorrect response: #{r.inspect}"
+  end
+
+  if r[0] != 'OK'
+    puts "Not OK: #{r.inspect}"
+  end
+
+  if r[1] !~ /^\d+$/
+    puts "Not OK: #{r.inspect}"
+  end
+end
+
+puts 'All messages sent'
+
+puts 'Remove all but the last message'
+(1...MESSAGES.size).each do |count|
+  c.get
+end
+
+c.add('Eleventh')
+l = []
+
+puts "Retrieving the only 2 messages"
+
+(1..2).each do |count|
+  r = c.get
+
+  if r.size != 3
+    puts "Incorrect response: #{r.inspect}"
+  end
+
+  if r[0] != 'OK'
+    puts "Not OK: #{r.inspect}"
+  end
+
+  if r[1] !~ /^\d+$/
+    puts "Not OK: #{r.inspect}"
+  end
+
+  l << r[2]
+end
+
+NEW_MESSAGES = %w(Tenth Eleventh)
+
+if NEW_MESSAGES != l
+  puts 'Messages not returned in order'
+  puts "Expected.: #{NEW_MESSAGES.inspect}"
+  puts "Actual...: #{l.inspect}"
+end
+
+r = c.get
+
+if r.size != 2
+  puts "Incorrect response: #{r.inspect}"
+end
+
+if r[0] != 'ERROR'
+  puts "Incorrect response: #{r.inspect}"
+end
+
+if r[1] != "QUEUE EMPTY"
+  puts "Queue should be empty: #{r}"
+end
