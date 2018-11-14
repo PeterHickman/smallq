@@ -3,52 +3,82 @@
 require 'socket'
 require 'thread'
 
-semaphore = Mutex.new
+class QueueManager
+  def initialize
+    @message_id = Time.now.to_i
+    @message_id_mutex = Mutex.new
+
+    @q = []
+    @q_mutex = Mutex.new
+    @q_stats_adds = 0
+    @q_stats_gets = 0
+  end
+
+  def add(message)
+    new_message_id = nil
+
+    @message_id_mutex.synchronize do
+      new_message_id = @message_id
+      @message_id += 1
+    end
+
+    @q_mutex.synchronize do
+      @q << { id: new_message_id, message: message }
+    end
+    @q_stats_adds += 1
+
+    new_message_id
+  end
+
+  def get
+    r = nil
+
+    @q_mutex.synchronize do
+      if @q.any?
+        r = @q.shift
+        @q_stats_gets += 1
+      end
+    end
+
+    r
+  end
+
+  def stats
+    return @q_stats_adds, @q_stats_gets, @q.size
+  end
+end
+
+def both(client, command, message)
+  puts "#{command} #{message}"
+  client.puts message
+end
 
 server = TCPServer.new('localhost', 2000)
 
-index = Time.now.to_i
+qm = QueueManager.new
 
-qd = []
-qi = []
-
-puts "Starting up with index #{index}"
+puts 'Starting up'
 
 loop do
   Thread.start(server.accept) do |client|
     m = client.gets.chomp
 
-    ##
-    # Need to be defined so they can be used inside
-    # the semaphore.synchronize { ... } blocks
-    ##
-    body = nil
-    i = nil
-
     if m.index('ADD ') == 0
       body = m[4..-1]
-      puts "Added #{index} [#{body}]"
-      client.puts "OK #{index}"
-      semaphore.synchronize {
-        qd << body
-        qi << index
-        index += 1
-      }
+      i = qm.add(body)
+      both(client, 'ADD', "OK #{i}")
     elsif m.index('GET') == 0
-      if qd.any?
-        semaphore.synchronize {
-          body = qd.shift
-          i = qi.shift
-        }
-        puts "Popped #{i} #{body}"
-        client.puts "OK #{i} #{body}"
+      r = qm.get
+      if r
+        both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
       else
-        puts 'ERROR QUEUE EMPTY'
-        client.puts 'ERROR QUEUE EMPTY'
+        both(client, 'GET', 'ERROR QUEUE EMPTY')
       end
+    elsif m.index('STATS') == 0
+      adds, gets, size = qm.stats
+      both(client, 'STATS', "OK #{adds} #{gets} #{size}")
     else
-      puts 'ERROR UNKNOWN COMMAND'
-      client.puts 'ERROR UNKNOWN COMMAND'
+      both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
     end
 
     client.close

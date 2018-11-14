@@ -81,3 +81,5 @@ end
 if r[1] != "QUEUE EMPTY"
   puts "Queue should be empty: #{r}"
 end
+
+puts c.stats

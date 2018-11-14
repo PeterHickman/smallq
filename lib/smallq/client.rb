@@ -24,17 +24,19 @@ module Smallq
 
       status = x[0]
 
-      if status == 'OK'
-        ##
-        # Returning the status, id and body
-        ##
-        return x
-      else
-        ##
-        # An error, plus the message
-        ##
-        return status, x[1..-1].join(' ')
-      end
+      ##
+      # Returning the status, id and body
+      ##
+      return x if status == 'OK'
+
+      ##
+      # An error, plus the message
+      ##
+      return status, x[1..-1].join(' ')
+    end
+
+    def stats
+      command('STATS')
     end
 
     private
