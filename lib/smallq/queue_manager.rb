@@ -43,7 +43,7 @@ module Smallq
     end
 
     def stats
-      return @q_stats_adds, @q_stats_gets, @q.size, @q_stats_updated_at
+      [@q_stats_adds, @q_stats_gets, @q.size, @q_stats_updated_at]
     end
   end
 end
