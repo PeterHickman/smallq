@@ -61,24 +61,28 @@ puts 'Starting up'
 
 loop do
   Thread.start(server.accept) do |client|
-    m = client.gets.chomp
+    begin
+      m = client.gets.chomp
 
-    if m.index('ADD ') == 0
-      body = m[4..-1]
-      i = qm.add(body)
-      both(client, 'ADD', "OK #{i}")
-    elsif m.index('GET') == 0
-      r = qm.get
-      if r
-        both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
+      if m.index('ADD ') == 0
+        body = m[4..-1]
+        i = qm.add(body)
+        both(client, 'ADD', "OK #{i}")
+      elsif m.index('GET') == 0
+        r = qm.get
+        if r
+          both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
+        else
+          both(client, 'GET', 'ERROR QUEUE EMPTY')
+        end
+      elsif m.index('STATS') == 0
+        adds, gets, size = qm.stats
+        both(client, 'STATS', "OK #{adds} #{gets} #{size}")
       else
-        both(client, 'GET', 'ERROR QUEUE EMPTY')
+        both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
       end
-    elsif m.index('STATS') == 0
-      adds, gets, size = qm.stats
-      both(client, 'STATS', "OK #{adds} #{gets} #{size}")
-    else
-      both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
+    rescue => e
+      both(client, 'ERROR', "ERROR #{e}")
     end
 
     client.close
