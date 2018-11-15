@@ -21,9 +21,9 @@ module Smallq
 
       @q_mutex.synchronize do
         @q << { id: new_message_id, message: message }
+        @q_stats_adds += 1
+        @q_stats_updated_at = Time.now.to_i
       end
-      @q_stats_adds += 1
-      @q_stats_updated_at = Time.now.to_i
 
       new_message_id
     end
