@@ -21,20 +21,20 @@ puts 'Starting up'
 loop do
   Thread.start(server.accept) do |client|
     begin
-      m = client.gets.chomp
+      m = client.gets.chomp.split(' ', 3)
 
-      if m.index('ADD ') == 0
-        body = m[4..-1]
-        i = qm.add(body)
+      case m[0]
+      when 'ADD'
+        i = qm.add(m[1])
         both(client, 'ADD', "OK #{i}")
-      elsif m.index('GET') == 0
+      when 'GET'
         r = qm.get
         if r
           both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
         else
           both(client, 'GET', 'ERROR QUEUE EMPTY')
         end
-      elsif m.index('STATS') == 0
+      when 'STATS'
         adds, gets, size, updated_at = qm.stats
         both(client, 'STATS', "OK #{adds} #{gets} #{size} #{updated_at}")
       else
