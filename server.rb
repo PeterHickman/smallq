@@ -12,6 +12,7 @@ class QueueManager
     @q_mutex = Mutex.new
     @q_stats_adds = 0
     @q_stats_gets = 0
+    @q_stats_updated_at = 0
   end
 
   def add(message)
@@ -26,6 +27,7 @@ class QueueManager
       @q << { id: new_message_id, message: message }
     end
     @q_stats_adds += 1
+    @q_stats_updated_at = Time.now.to_i
 
     new_message_id
   end
@@ -37,6 +39,7 @@ class QueueManager
       if @q.any?
         r = @q.shift
         @q_stats_gets += 1
+        @q_stats_updated_at = Time.now.to_i
       end
     end
 
@@ -44,7 +47,7 @@ class QueueManager
   end
 
   def stats
-    return @q_stats_adds, @q_stats_gets, @q.size
+    return @q_stats_adds, @q_stats_gets, @q.size, @q_stats_updated_at
   end
 end
 
@@ -76,8 +79,8 @@ loop do
           both(client, 'GET', 'ERROR QUEUE EMPTY')
         end
       elsif m.index('STATS') == 0
-        adds, gets, size = qm.stats
-        both(client, 'STATS', "OK #{adds} #{gets} #{size}")
+        adds, gets, size, updated_at = qm.stats
+        both(client, 'STATS', "OK #{adds} #{gets} #{size} #{updated_at}")
       else
         both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
       end
