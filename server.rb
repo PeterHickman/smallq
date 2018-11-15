@@ -35,8 +35,7 @@ loop do
           both(client, 'GET', 'ERROR QUEUE EMPTY')
         end
       when 'STATS'
-        adds, gets, size, updated_at = qm.stats
-        both(client, 'STATS', "OK #{adds} #{gets} #{size} #{updated_at}")
+        both(client, 'STATS', "OK #{qm.stats.join(' ')}")
       else
         both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
       end
