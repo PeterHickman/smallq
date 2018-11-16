@@ -4,62 +4,50 @@
 $LOAD_PATH << './lib'
 
 require 'smallq/client'
+require 'test_helper'
 
 c = Smallq::Client.new('localhost', 2000)
 
 puts 'Make sure the server is running'
 puts '-------------------------------'
 
-MESSAGES = %w(First Second Third Fourth Fifth Sixth Seveth Eight Ninth Tenth)
+MESSAGES = %w(First Second Third Fourth Fifth Sixth Seveth Eight Ninth Tenth).freeze
 
 puts "Sending #{MESSAGES.size} messages"
 
 MESSAGES.each do |message|
   r = c.add(message)
 
-  if r[:status] != 'OK'
-    puts "Not OK: #{r.inspect}"
-  end
+  assert_equal('OK', r[:status])
 end
 
 puts 'All messages sent'
 
 puts 'Remove all but the last message'
-(1...MESSAGES.size).each do |count|
+(1...MESSAGES.size).times do
   c.get
 end
 
 c.add('Eleventh')
 l = []
 
-puts "Retrieving the only 2 messages"
+puts 'Retrieving the only 2 messages'
 
-(1..2).each do |count|
+(1..2).times do
   r = c.get
 
-  if r[:status] != 'OK'
-    puts "Not OK: #{r.inspect}"
-  end
+  assert_equal('OK', r[:status])
 
   l << r[:message]
 end
 
-NEW_MESSAGES = %w(Tenth Eleventh)
+NEW_MESSAGES = %w(Tenth Eleventh).freeze
 
-if NEW_MESSAGES != l
-  puts 'Messages not returned in order'
-  puts "Expected.: #{NEW_MESSAGES.inspect}"
-  puts "Actual...: #{l.inspect}"
-end
+assert_equal(NEW_MESSAGES, l)
 
 r = c.get
 
-if r[:status] != 'ERROR'
-  puts "Incorrect response: #{r.inspect}"
-end
-
-if r[:message] != "QUEUE EMPTY"
-  puts "Queue should be empty: #{r}"
-end
+assert_equal('ERROR', r[:status])
+assert_equal('QUEUE EMPTY', r[:message])
 
 puts c.stats

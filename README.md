@@ -18,11 +18,11 @@ For the server to be robust and fast it will do the least to get the job done. A
 
 It means of course that the server is vulnerable to the client getting things wrong. But it is a valid trade-off
 
-## Limitations
+## Limitations and issues
 
 * Only one queue
-* If the server goes down all the unread messages are lost
+* Should do some logging
+* If the server goes down all the unread messages are lost - needs journalling?
 * If the client goes down before it processes the message the message is lost
 
 These things can be fixed
-## 
