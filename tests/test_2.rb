@@ -17,15 +17,11 @@ puts "Sending #{MESSAGES.size} messages"
 MESSAGES.each do |message|
   r = c.add(message)
 
-  if r.size != 2
-    puts "Incorrect response: #{r.inspect}"
-  end
-
-  if r[0] != 'OK'
+  if r[:status] != 'OK'
     puts "Not OK: #{r.inspect}"
   end
 
-  if r[1] !~ /^\d+$/
+  if r[:message] !~ /^\d+$/
     puts "Not OK: #{r.inspect}"
   end
 end
@@ -45,19 +41,15 @@ puts "Retrieving the only 2 messages"
 (1..2).each do |count|
   r = c.get
 
-  if r.size != 3
-    puts "Incorrect response: #{r.inspect}"
-  end
-
-  if r[0] != 'OK'
+  if r[:status] != 'OK'
     puts "Not OK: #{r.inspect}"
   end
 
-  if r[1] !~ /^\d+$/
+  if r[:id] !~ /^\d+$/
     puts "Not OK: #{r.inspect}"
   end
 
-  l << r[2]
+  l << r[:message]
 end
 
 NEW_MESSAGES = %w(Tenth Eleventh)
@@ -70,15 +62,11 @@ end
 
 r = c.get
 
-if r.size != 2
+if r[:status] != 'ERROR'
   puts "Incorrect response: #{r.inspect}"
 end
 
-if r[0] != 'ERROR'
-  puts "Incorrect response: #{r.inspect}"
-end
-
-if r[1] != "QUEUE EMPTY"
+if r[:message] != "QUEUE EMPTY"
   puts "Queue should be empty: #{r}"
 end
 
