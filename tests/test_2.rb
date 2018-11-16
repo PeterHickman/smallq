@@ -20,10 +20,6 @@ MESSAGES.each do |message|
   if r[:status] != 'OK'
     puts "Not OK: #{r.inspect}"
   end
-
-  if r[:message] !~ /^\d+$/
-    puts "Not OK: #{r.inspect}"
-  end
 end
 
 puts 'All messages sent'
@@ -42,10 +38,6 @@ puts "Retrieving the only 2 messages"
   r = c.get
 
   if r[:status] != 'OK'
-    puts "Not OK: #{r.inspect}"
-  end
-
-  if r[:id] !~ /^\d+$/
     puts "Not OK: #{r.inspect}"
   end
 

@@ -13,7 +13,7 @@ module Smallq
 
       x = r.chomp.split(' ', 2)
 
-      return { status: x[0], message: x[1] }
+      return { status: x[0], id: x[1].to_i }
     end
 
     def get
@@ -22,7 +22,7 @@ module Smallq
       x = r.chomp.split(' ', 3)
 
       if x[0] == 'OK'
-        return { status: x[0], id: x[1], message: x[2] }
+        return { status: x[0], id: x[1].to_i, message: x[2] }
       else
         return { status: x[0], message: x[1..-1].join(' ') }
       end
@@ -33,7 +33,7 @@ module Smallq
 
       x = r.chomp.split(' ')
 
-      return { status: x[0], adds: x[1], gets: x[2], size: x[3], last_used: x[4] }
+      return { status: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
     end
 
     private
