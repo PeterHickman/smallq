@@ -13,33 +13,27 @@ puts '-------------------------------'
 
 MESSAGES = %w(First Second Third Fourth Fifth Sixth Seveth Eight Ninth Tenth).freeze
 
-puts "Sending #{MESSAGES.size} messages"
-
 MESSAGES.each do |message|
   r = c.add(message)
 
-  assert_equal('OK', r[:status])
+  assert_equal('OK', r[:status], 'Message added ok')
 end
 
-puts 'All messages sent'
-
 l = []
-
-puts "Retrieving all #{MESSAGES.size} messages"
 
 MESSAGES.size.times do
   r = c.get
 
-  assert_equal('OK', r[:status])
+  assert_equal('OK', r[:status], 'Message retrieved ok')
 
   l << r[:message]
 end
 
-assert_equal(MESSAGES, l)
+assert_equal(MESSAGES, l, 'Messages received in the order they were sent')
 
 r = c.get
 
-assert_equal('ERROR', r[:status])
-assert_equal('QUEUE EMPTY', r[:message])
+assert_equal('ERROR', r[:status], 'Status was error')
+assert_equal('QUEUE EMPTY', r[:message], 'The queue was empty')
 
 puts c.stats

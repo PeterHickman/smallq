@@ -13,17 +13,13 @@ puts '-------------------------------'
 
 MESSAGES = %w(First Second Third Fourth Fifth Sixth Seveth Eight Ninth Tenth).freeze
 
-puts "Sending #{MESSAGES.size} messages"
-
 MESSAGES.each do |message|
   r = c.add(message)
 
-  assert_equal('OK', r[:status])
+  assert_equal('OK', r[:status], 'Message added ok')
 end
 
-puts 'All messages sent'
-
-puts 'Remove all but the last message'
+# Remove all but the last message
 (MESSAGES.size - 1).times do
   c.get
 end
@@ -31,23 +27,23 @@ end
 c.add('Eleventh')
 l = []
 
-puts 'Retrieving the only 2 messages'
+# Retrieving the only 2 messages
 
 2.times do
   r = c.get
 
-  assert_equal('OK', r[:status])
+  assert_equal('OK', r[:status], 'Message retrieved ok')
 
   l << r[:message]
 end
 
 NEW_MESSAGES = %w(Tenth Eleventh).freeze
 
-assert_equal(NEW_MESSAGES, l)
+assert_equal(NEW_MESSAGES, l, 'Messages received in the order they were sent')
 
 r = c.get
 
-assert_equal('ERROR', r[:status])
-assert_equal('QUEUE EMPTY', r[:message])
+assert_equal('ERROR', r[:status], 'Status was error')
+assert_equal('QUEUE EMPTY', r[:message], 'The queue was empty')
 
 puts c.stats

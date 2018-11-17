@@ -43,5 +43,13 @@ module Smallq
       s.puts message
       s.gets
     end
+
+    def valid_group_name(name)
+      if name =~ /\A[a-zA-Z0-9_\-\.]{2,30}\z/
+        true
+      else
+        false
+      end
+    end
   end
 end
