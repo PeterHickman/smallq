@@ -24,7 +24,7 @@ end
 puts 'All messages sent'
 
 puts 'Remove all but the last message'
-(1...MESSAGES.size).times do
+(MESSAGES.size - 1).times do
   c.get
 end
 
@@ -33,7 +33,7 @@ l = []
 
 puts 'Retrieving the only 2 messages'
 
-(1..2).times do
+2.times do
   r = c.get
 
   assert_equal('OK', r[:status])

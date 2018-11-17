@@ -27,7 +27,7 @@ l = []
 
 puts "Retrieving all #{MESSAGES.size} messages"
 
-(1..MESSAGES.size).times do
+MESSAGES.size.times do
   r = c.get
 
   assert_equal('OK', r[:status])
