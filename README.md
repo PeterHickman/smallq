@@ -26,7 +26,9 @@ All you need to do, at this point, is run the server code
 The host is hardcoded as `localhost` and the port to `2000`
 
 ## Usage - the client
-With all of three commands
+Messages are added to named queues, the queue will be created once a message is added to it. Gets from non-existant queues will not create the queue. Queue names are 2 to 30 characters long consisting to `a-z`, upper and lower case, `0-9`, `-`, `_` and `.`. The range of valid characters may expand in the future
+
+There are all of three commands
 ### Add
 ```ruby
 require 'smallq/client'
@@ -84,4 +86,4 @@ This returns a list of all the known queues (those that have had messages added 
 ### Client
 * If the client goes down before it processes the message the message is lost
 
-These things can be fixed
+These things can be fixed, perhaps
