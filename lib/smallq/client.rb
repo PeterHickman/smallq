@@ -1,13 +1,22 @@
 require 'socket'
 
 module Smallq
+  class QueueNameInvalidError < StandardError
+  end
+
   class Client
+    QUEUE_NAME_REGEX = /\A[a-zA-Z0-9_\-\.]{2,30}\z/
+
     def initialize(hostname, port)
       @hostname = hostname
       @port = port
     end
 
     def add(queue_name, message)
+      unless valid_queue_name(queue_name)
+        raise QueueNameInvalidError
+      end
+
       r = command("ADD #{queue_name} #{message}")
 
       x = r.first.chomp.split(' ', 2)
@@ -16,6 +25,10 @@ module Smallq
     end
 
     def get(queue_name)
+      unless valid_queue_name(queue_name)
+        raise QueueNameInvalidError
+      end
+
       r = command("GET #{queue_name}")
 
       x = r.first.chomp.split(' ', 3)
@@ -55,8 +68,8 @@ module Smallq
       return l
     end
 
-    def valid_group_name(name)
-      if name =~ /\A[a-zA-Z0-9_\-\.]{2,30}\z/
+    def valid_queue_name(name)
+      if name =~ QUEUE_NAME_REGEX
         true
       else
         false

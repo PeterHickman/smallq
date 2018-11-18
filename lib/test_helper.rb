@@ -12,6 +12,24 @@ def assert_equal(expected, actual, message = nil)
   end
 end
 
+def assert_raises(expection, message)
+  begin
+    yield
+  rescue => e
+    assert_equal(expection, e.class, message)
+  end
+end
+
+def assert_doesnt_raise(expection, message)
+  begin
+    yield
+  rescue => e
+    assert_equal(0, 1, "Raised #{e.class}")
+  end
+
+  assert_equal(1, 1, message)
+end
+
 def drain_queues(c)
   r = c.stats
   r.each do |q|

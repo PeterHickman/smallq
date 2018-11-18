@@ -17,50 +17,66 @@ puts '-------------------------------'
 # Valid names
 ##
 
-x = c.send(:valid_group_name, 'xx')
-assert_equal(true, x, 'Shortest valid name')
+assert_doesnt_raise(Smallq::QueueNameInvalidError, 'Shortest valid name') do
+  c.add('xx', 'My message')
+end
 
-x = c.send(:valid_group_name, 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-assert_equal(true, x, 'Longest valid name')
+assert_doesnt_raise(Smallq::QueueNameInvalidError, 'Longest valid name') do
+  c.add('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'My message')
+end
 
-x = c.send(:valid_group_name, 'a-K_7.a')
-assert_equal(true, x, 'All valid character types')
+assert_doesnt_raise(Smallq::QueueNameInvalidError, 'All valid character types') do
+  c.add('a-K_7.a', 'My message')
+end
 
 ##
 # Invalid names
 ##
-x = c.send(:valid_group_name, 'x')
-assert_equal(false, x, 'Too short')
 
-x = c.send(:valid_group_name, '')
-assert_equal(false, x, 'Blank')
+assert_raises(Smallq::QueueNameInvalidError, 'Too short') do
+  c.add('x', 'My message')
+end
 
-x = c.send(:valid_group_name, 'ppppppppppppppppppppppppppppppp')
-assert_equal(false, x, 'Too long')
+assert_raises(Smallq::QueueNameInvalidError, 'Blank') do
+  c.add('', 'My message')
+end
 
-x = c.send(:valid_group_name, 'fr ed')
-assert_equal(false, x, 'Contains a space')
+assert_raises(Smallq::QueueNameInvalidError, 'Too long') do
+  c.add('ppppppppppppppppppppppppppppppp', 'My message')
+end
 
-x = c.send(:valid_group_name, "fr\ted")
-assert_equal(false, x, 'Contains a tab')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a space') do
+  c.add('fr ed', 'My message')
+end
 
-x = c.send(:valid_group_name, "fr\ned")
-assert_equal(false, x, 'Contains a new line')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a tab') do
+  c.add("fr\ted", 'My message')
+end
 
-x = c.send(:valid_group_name, "fr\red")
-assert_equal(false, x, 'Contains a return')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a new line') do
+  c.add("fr\ned", 'My message')
+end
 
-x = c.send(:valid_group_name, "fr\fed")
-assert_equal(false, x, 'Contains a form feed')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a return') do
+  c.add("fr\red", 'My message')
+end
 
-x = c.send(:valid_group_name, "fr\0ed")
-assert_equal(false, x, 'Contains a zero byte')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a form feed') do
+  c.add("fr\fed", 'My message')
+end
 
-x = c.send(:valid_group_name, ' fred')
-assert_equal(false, x, 'Starts with a space')
+assert_raises(Smallq::QueueNameInvalidError, 'Contains a zero byte') do
+  c.add("fr\0ed", 'My message')
+end
 
-x = c.send(:valid_group_name, 'fred ')
-assert_equal(false, x, 'Ends with a space')
+assert_raises(Smallq::QueueNameInvalidError, 'Starts with a space') do
+  c.add(' fred', 'My message')
+end
 
-x = c.send(:valid_group_name, 'fr^ed')
-assert_equal(false, x, 'Contains an invalid character')
+assert_raises(Smallq::QueueNameInvalidError, 'Ends with a space') do
+  c.add('fred ', 'My message')
+end
+
+assert_raises(Smallq::QueueNameInvalidError, 'Contains an invalid character') do
+  c.add('fr^ed', 'My message')
+end
