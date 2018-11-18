@@ -18,11 +18,70 @@ For the server to be robust and fast it will do the least to get the job done. A
 
 It means of course that the server is vulnerable to the client getting things wrong. But it is a valid trade-off
 
+## Usage - the server
+
+All you need to do, at this point, is run the server code
+
+	$ ./server.rb
+The host is hardcoded as `localhost` and the port to `2000`
+
+## Usage - the client
+With all of three commands
+### Add
+```ruby
+require 'smallq/client'
+
+c = Smallq::Client.new('localhost', 2000)
+
+r = c.add('queue_name', 'My first message')
+
+r => {:status=>"OK", :id=>1542545179}
+```
+
+The `:status` should always be`OK` but check it anyway, the `:id` is the id that the message was given. It could be useful for logging should something go wrong but status is the important part
+### Get
+```ruby
+require 'smallq/client'
+
+c = Smallq::Client.new('localhost', 2000)
+
+r = c.get('queue_name')
+
+r => {:status=>"OK", :id=>1542545179, :message=>"My first message"}
+```
+If there is something in the queue then `:status` will be `OK`, `:id` will be the same id as was given when the message was added and `:message` will be the original message. If the queue is empty or has not had anything added to it yet then `:status` will be `ERROR` and `:message` will be `QUEUE EMPTY`
+### Stats
+```ruby
+require 'smallq/client'
+
+c = Smallq::Client.new('localhost', 2000)
+
+r = c.stats
+
+r => [
+  {:queue_name=>"general", :adds=>51, :gets=>51, :size=>0, :last_used=>1542545655}
+  {:queue_name=>"tom", :adds=>10, :gets=>10, :size=>0, :last_used=>1542545651}
+  {:queue_name=>"fred", :adds=>10, :gets=>10, :size=>0, :last_used=>1542545655}
+]
+```
+This returns a list of all the known queues (those that have had messages added to them) and their stats
+
+* `:queue_name` The name of the queue
+* `:adds` The number of messages that have been added to the queue
+* `:gets` The number of messages that have been read from the queue
+* `:size` The number of messages currently in the queue
+* `:last_used` The last time that the queue was added to or read from
+
 ## Limitations and issues
 
-* Only one queue
+### Server
 * Should do some logging
-* If the server goes down all the unread messages are lost - needs journalling?
+* Journalling to recover from crashes
+* Configuration options
+* The server to daemonise
+* Purge inactive queues
+
+### Client
 * If the client goes down before it processes the message the message is lost
 
 These things can be fixed
