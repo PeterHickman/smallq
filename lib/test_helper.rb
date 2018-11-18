@@ -11,3 +11,17 @@ def assert_equal(expected, actual, message = nil)
     puts "  Actual...: #{actual.inspect}"
   end
 end
+
+def drain_queues(c)
+  r = c.stats
+  r.each do |q|
+    if q[:size] == 0
+      puts "Queue #{q[:queue_name]} is empty"
+    else
+      puts "Draining queue #{q[:queue_name]}"
+      q[:size].times do
+        c.get(q[:queue_name])
+      end
+    end
+  end
+end

@@ -25,17 +25,19 @@ loop do
 
       case m[0]
       when 'ADD'
-        i = qm.add(m[1])
+        i = qm.add(m[1], m[2])
         both(client, 'ADD', "OK #{i}")
       when 'GET'
-        r = qm.get
+        r = qm.get(m[1])
         if r
           both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
         else
           both(client, 'GET', 'ERROR QUEUE EMPTY')
         end
       when 'STATS'
-        both(client, 'STATS', "OK #{qm.stats.join(' ')}")
+        qm.stats.each do |l|
+          both(client, 'STATS', l.join(' '))
+        end
       else
         both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
       end

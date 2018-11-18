@@ -8,6 +8,8 @@ require 'test_helper'
 
 c = Smallq::Client.new('localhost', 2000)
 
+drain_queues(c)
+
 puts 'Make sure the server is running'
 puts '-------------------------------'
 

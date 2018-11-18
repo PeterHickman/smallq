@@ -7,18 +7,18 @@ module Smallq
       @port = port
     end
 
-    def add(message)
-      r = command("ADD #{message}")
+    def add(queue_name, message)
+      r = command("ADD #{queue_name} #{message}")
 
-      x = r.chomp.split(' ', 2)
+      x = r.first.chomp.split(' ', 2)
 
       { status: x[0], id: x[1].to_i }
     end
 
-    def get
-      r = command('GET')
+    def get(queue_name)
+      r = command("GET #{queue_name}")
 
-      x = r.chomp.split(' ', 3)
+      x = r.first.chomp.split(' ', 3)
 
       if x[0] == 'OK'
         { status: x[0], id: x[1].to_i, message: x[2] }
@@ -30,9 +30,15 @@ module Smallq
     def stats
       r = command('STATS')
 
-      x = r.chomp.split(' ')
+      l = []
 
-      { status: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
+      r.each do |x|
+        x = x.chomp.split(' ')
+
+        l << { queue_name: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
+      end
+
+      l
     end
 
     private
@@ -40,8 +46,13 @@ module Smallq
     def command(message)
       s = TCPSocket.open(@hostname, @port)
 
+      l = []
       s.puts message
-      s.gets
+      while m = s.gets
+        l << m
+      end
+
+      return l
     end
 
     def valid_group_name(name)
