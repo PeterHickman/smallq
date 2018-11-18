@@ -22,7 +22,7 @@ module Smallq
       @q[queue_name][:mutex].synchronize do
         @q[queue_name][:data] << { id: new_message_id, message: message }
         @q[queue_name][:adds] += 1
-        @q[queue_name][:updated_at] = Time.now.to_i
+        @q[queue_name][:last_used] = Time.now.to_i
       end
 
       new_message_id
@@ -37,7 +37,7 @@ module Smallq
         if @q[queue_name][:data].any?
           r = @q[queue_name][:data].shift
           @q[queue_name][:gets] += 1
-          @q[queue_name][:updated_at] = Time.now.to_i
+          @q[queue_name][:last_used] = Time.now.to_i
         end
       end
 
@@ -47,7 +47,7 @@ module Smallq
     def stats
       l = []
       @q.each do |queue_name, queue|
-        l << [queue_name, queue[:adds], queue[:gets], queue[:data].size, queue[:updated_at]]
+        l << [queue_name, queue[:adds], queue[:gets], queue[:data].size, queue[:last_used]]
       end
       l
     end
@@ -55,7 +55,7 @@ module Smallq
     private
 
     def new_queue
-      { mutex: Mutex.new, adds: 0, gets: 0, updated_at: 0, data: [] }
+      { mutex: Mutex.new, adds: 0, gets: 0, last_used: 0, data: [] }
     end
   end
 end
