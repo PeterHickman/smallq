@@ -5,6 +5,7 @@ $LOAD_PATH << './lib'
 
 QUEUE_1 = 'tom'
 QUEUE_2 = 'fred'
+QUEUE_3 = 'albert'
 
 require 'smallq/client'
 require 'test_helper'
@@ -33,6 +34,9 @@ MESSAGES.size.times do
 
   assert_equal('OK', r[:status], 'Message retrieved ok')
 end
+
+r = c.get(QUEUE_3)
+assert_equal('ERROR', r[:status], 'Undefined queue is empty')
 
 r = c.stats
 r.each do |q|
