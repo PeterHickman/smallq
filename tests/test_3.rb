@@ -8,8 +8,6 @@ require 'test_helper'
 
 c = Smallq::Client.new('localhost', 2000)
 
-drain_queues(c)
-
 puts 'Make sure the server is running'
 puts '-------------------------------'
 
@@ -17,15 +15,15 @@ puts '-------------------------------'
 # Valid names
 ##
 
-assert_doesnt_raise(Smallq::QueueNameInvalidError, 'Shortest valid name') do
+assert_doesnt_raise('Shortest valid name') do
   c.add('xx', 'My message')
 end
 
-assert_doesnt_raise(Smallq::QueueNameInvalidError, 'Longest valid name') do
+assert_doesnt_raise('Longest valid name') do
   c.add('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'My message')
 end
 
-assert_doesnt_raise(Smallq::QueueNameInvalidError, 'All valid character types') do
+assert_doesnt_raise('All valid character types') do
   c.add('a-K_7.a', 'My message')
 end
 
@@ -79,4 +77,40 @@ end
 
 assert_raises(Smallq::QueueNameInvalidError, 'Contains an invalid character') do
   c.add('fr^ed', 'My message')
+end
+
+##
+# Valid messages
+##
+
+assert_doesnt_raise('Valid message') do
+  c.add('general', 'asdasdasd')
+end
+
+assert_doesnt_raise('Shortest message') do
+  c.add('general', 'x')
+end
+
+##
+# Invalid messaes
+##
+
+assert_raises(Smallq::MessageInvalidError, 'Empty message') do
+  c.add('general', '')
+end
+
+assert_raises(Smallq::MessageInvalidError, 'Contains \n') do
+  c.add('general', "fr\ned")
+end
+
+assert_raises(Smallq::MessageInvalidError, 'Contains \r') do
+  c.add('general', "fr\red")
+end
+
+assert_raises(Smallq::MessageInvalidError, 'Contains \f') do
+  c.add('general', "fr\fed")
+end
+
+assert_raises(Smallq::MessageInvalidError, 'Contains \0') do
+  c.add('general', "fr\0ed")
 end

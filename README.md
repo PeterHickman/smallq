@@ -26,7 +26,11 @@ All you need to do, at this point, is run the server code
 The host is hardcoded as `localhost` and the port to `2000`
 
 ## Usage - the client
+#### Queue names
 Messages are added to named queues, the queue will be created once a message is added to it. Gets from non-existant queues will not create the queue. Queue names are 2 to 30 characters long consisting to `a-z`, upper and lower case, `0-9`, `-`, `_` and `.`. The range of valid characters may expand in the future
+
+#### Message body
+The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or encode it with something like `base64` when you go to add it and unescape or decode when you get it off the queue
 
 There are all of three commands
 ### Add

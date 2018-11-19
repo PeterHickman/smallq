@@ -4,6 +4,9 @@ module Smallq
   class QueueNameInvalidError < StandardError
   end
 
+  class MessageInvalidError < StandardError
+  end
+
   class Client
     QUEUE_NAME_REGEX = /\A[a-zA-Z0-9_\-\.]{2,30}\z/
 
@@ -15,6 +18,10 @@ module Smallq
     def add(queue_name, message)
       unless valid_queue_name(queue_name)
         raise QueueNameInvalidError
+      end
+
+      unless validate_message(message)
+        raise MessageInvalidError
       end
 
       r = command("ADD #{queue_name} #{message}")
@@ -73,6 +80,22 @@ module Smallq
         true
       else
         false
+      end
+    end
+
+    def validate_message(message)
+      if message.size == 0
+        false
+      elsif message.include?("\n")
+        false
+      elsif message.include?("\r")
+        false
+      elsif message.include?("\f")
+        false
+      elsif message.include?("\0")
+        false
+      else
+        true
       end
     end
   end

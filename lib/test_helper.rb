@@ -20,7 +20,7 @@ def assert_raises(expection, message)
   end
 end
 
-def assert_doesnt_raise(expection, message)
+def assert_doesnt_raise(message)
   begin
     yield
   rescue => e
