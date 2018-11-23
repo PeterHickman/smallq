@@ -1,24 +1,25 @@
 #!/usr/bin/env ruby
 
-require 'socket'
+$LOAD_PATH << './lib'
 
-def send(hostname, port, message)
-  s = TCPSocket.open(hostname, port)
+require 'smallq/client'
 
-  s.puts message
+QUEUE = 'test_queue'
 
-  m = s.gets
-  puts m
+c = Smallq::Client.new('localhost', 2000)
 
-  s.close
+count = 0
+
+t1 = Time.now
+
+x = c.get(QUEUE)
+
+until x[:status] == 'ERROR'
+  count += 1
+  x = c.get(QUEUE)
 end
 
-hostname = 'localhost'
-port = 2000
+t2 = Time.now
 
-puts "GET"
-loop do
-  send(hostname, port, 'GET')
-  sleep 1
-end
-
+puts "Read #{count} messages in #{t2 - t1} seconds"
+puts "That is #{count.to_f / (t2 - t1)} per second"
