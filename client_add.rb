@@ -6,7 +6,7 @@ require 'smallq/client'
 
 TEST_MESSAGE = 'Test message'
 QUEUE = 'test_queue'
-NUMBER_OF_MESSAGES = 200_000 #2_000_000
+NUMBER_OF_MESSAGES = 2_000_000
 
 c = Smallq::Client.new('localhost', 2000)
 
