@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+$LOAD_PATH << './lib'
+
+require 'smallq/client'
+
+def stats(c)
+  l = {}
+  c.stats.each do |q|
+    l[q[:queue_name]] = q
+  end
+  l
+end
+
+c = Smallq::Client.new('localhost', 2000)
+
+a = stats(c)
+
+loop do
+  if a.any?
+    max = a.keys.map(&:size).max
+
+    puts "%-#{max}s |       adds |       gets |       size" % 'queue'
+    puts "#{'-' * max}-+------------+------------+-----------"
+    a.each do |q, data|
+      puts "%-#{max}s | %10d | %10d | %10d" % [q, data[:adds], data[:gets], data[:size]]
+    end
+  else
+    puts 'No currently active queues'
+  end
+
+  puts
+  
+  sleep 5
+  a = stats(c)
+end
