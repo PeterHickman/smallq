@@ -4,19 +4,20 @@ $LOAD_PATH << './lib'
 
 require 'smallq/client'
 
+number_of_messages = ARGV[0].to_i
+
 TEST_MESSAGE = 'Test message'
 QUEUE = 'test_queue'
-NUMBER_OF_MESSAGES = 2_000_000
 
 c = Smallq::Client.new('localhost', 2000)
 
 t1 = Time.now
 
-NUMBER_OF_MESSAGES.times do
+number_of_messages.times do
   c.add(QUEUE, TEST_MESSAGE)
 end
 
 t2 = Time.now
 
-puts "Sent #{NUMBER_OF_MESSAGES} messages in #{t2 - t1} seconds"
-puts "That is #{NUMBER_OF_MESSAGES.to_f / (t2 - t1)} per second"
+puts "Sent #{number_of_messages} messages in #{t2 - t1} seconds"
+puts "That is #{number_of_messages.to_f / (t2 - t1)} per second"
