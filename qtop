@@ -20,8 +20,9 @@ a = stats(c)
 loop do
   if a.any?
     max = a.keys.map(&:size).max
+    max = 8 if max < 8
 
-    puts "%-#{max}s |       adds |       gets |       size" % 'queue'
+    puts "%-#{max}s |       adds |       gets |       size" % Time.now.strftime('%H:%M:%S')
     puts "#{'-' * max}-+------------+------------+-----------"
     a.each do |q, data|
       puts "%-#{max}s | %10d | %10d | %10d" % [q, data[:adds], data[:gets], data[:size]]
