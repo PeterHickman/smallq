@@ -31,17 +31,15 @@ module Smallq
     def get(queue_name)
       return nil unless @q.key?(queue_name)
 
-      r = nil
-
       @q[queue_name][:mutex].synchronize do
         if @q[queue_name][:data].any?
-          r = @q[queue_name][:data].shift
           @q[queue_name][:gets] += 1
           @q[queue_name][:last_used] = Time.now.to_i
+          return @q[queue_name][:data].shift
         end
       end
 
-      r
+      nil
     end
 
     def stats
