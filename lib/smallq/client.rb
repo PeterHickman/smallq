@@ -25,10 +25,13 @@ module Smallq
       end
 
       r = command("ADD #{queue_name} #{message}")
+      if r.nil?
+        { status: 'ERROR', message: 'UNABLE TO CONNECT TO SERVER' }
+      else
+        x = r.first.chomp.split(' ', 2)
 
-      x = r.first.chomp.split(' ', 2)
-
-      { status: x[0], id: x[1].to_i }
+        { status: x[0], id: x[1].to_i }
+      end
     end
 
     def get(queue_name)
@@ -38,24 +41,30 @@ module Smallq
 
       r = command("GET #{queue_name}")
 
-      x = r.first.chomp.split(' ', 3)
-
-      if x[0] == 'OK'
-        { status: x[0], id: x[1].to_i, message: x[2] }
+      if r.nil?
+        { status: 'ERROR', message: 'UNABLE TO CONNECT TO SERVER' }
       else
-        { status: x[0], message: x[1..-1].join(' ') }
+        x = r.first.chomp.split(' ', 3)
+
+        if x[0] == 'OK'
+          { status: x[0], id: x[1].to_i, message: x[2] }
+        else
+          { status: x[0], message: x[1..-1].join(' ') }
+        end
       end
     end
 
     def stats
-      r = command('STATS')
-
       l = []
 
-      r.each do |x|
-        x = x.chomp.split(' ')
+      r = command('STATS')
 
-        l << { queue_name: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
+      unless r.nil?
+        r.each do |x|
+          x = x.chomp.split(' ')
+
+          l << { queue_name: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
+        end
       end
 
       l
@@ -64,13 +73,28 @@ module Smallq
     private
 
     def command(message)
-      s = TCPSocket.open(@hostname, @port)
+      GC.disable
 
-      l = []
-      s.puts message
-      while m = s.gets
-        l << m
+      s = TCPSocket.open(@hostname, @port)
+      tries = 3
+
+      while tries != 0
+        begin
+          l = []
+          s.puts message
+          while m = s.gets
+            l << m
+          end
+          tries = 0
+        rescue => e
+          tries -= 1
+          return nil if tries == 0
+          puts 'retry'
+          sleep 1
+        end
       end
+
+      GC.enable
 
       return l
     end
