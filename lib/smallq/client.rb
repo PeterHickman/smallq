@@ -75,7 +75,29 @@ module Smallq
     def command(message)
       GC.disable
 
-      s = TCPSocket.open(@hostname, @port)
+      ##
+      # First lets see if we can even connect
+      ##
+
+      tries = 3
+      s = nil
+
+      while tries != 0
+        begin
+          s = TCPSocket.open(@hostname, @port)
+          tries = 0
+        rescue => e
+          tries -= 1
+          puts 'retry connection'
+          sleep 1
+        end
+      end
+
+      return nil if s.nil?
+
+      ##
+      # Now try and execute the command
+      ##
       tries = 3
 
       while tries != 0
@@ -89,7 +111,7 @@ module Smallq
         rescue => e
           tries -= 1
           return nil if tries == 0
-          puts 'retry'
+          puts 'retry command'
           sleep 1
         end
       end
