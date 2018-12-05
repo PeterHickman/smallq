@@ -35,7 +35,7 @@ loop do
       else
         diff = now - old_now
         total = (data[:adds] - old_a[q][:adds]) + (data[:gets] - old_a[q][:gets])
-        puts "%-#{max}s | %10d | %10d | %10d | %10.4f" % [q, data[:adds], data[:gets], data[:size], total.to_f / diff]
+        puts "%-#{max}s | %10d | %10d | %10d | %10.2f" % [q, data[:adds], data[:gets], data[:size], total.to_f / diff]
       end
     end
   else
