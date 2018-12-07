@@ -38,6 +38,8 @@ loop do
   if x[:status] == 'OK'
     puts "Got work id##{x[:id]} #{x[:message]}"
 
+    t1 = Time.now
+
     f, t = x[:message].split(/\s+/).map(&:to_i)
     p = Progress.new(f, t)
     (f..t).each do |i|
@@ -47,6 +49,10 @@ loop do
         c.add(RESULTS_QUEUE, i.to_s)
       end
     end
+
+    t2 = Time.now
+    
+    puts "Processed #{t - f + 1} values in #{t2 - t1} seconds"
   else
     puts 'Waiting for work'
     sleep 10
