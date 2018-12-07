@@ -12,14 +12,14 @@ STEP = 999_999
 
 require 'smallq/client'
 
-def queue_size(c)
+def queue_details(c)
   r = c.stats
 
   c.stats.each do |q|
-    return q[:size] if q[:queue_name] == QUEUE_NAME
+    return q if q[:queue_name] == QUEUE_NAME
   end
 
-  0
+  {}
 end
 
 limit = ARGV[0]
@@ -38,14 +38,11 @@ logger.info "Work limit is #{limit}"
 f = 1
 
 loop do
-  size = queue_size(c)
+  d = queue_details(c)
+
+  size = d[:size] || 0
 
   logger.info "Queue #{QUEUE_NAME} size = #{size}"
-
-  if size >= limit
-    logger.info 'Maximum amount of work created'
-    break
-  end
 
   if size < MINIMUM_QUEUE_SIZE
     logger.info "Adding #{MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER} new items"
@@ -57,5 +54,11 @@ loop do
     end
   end
 
+  d = queue_details(c)
+
+  if d[:adds] > limit
+    logger.info 'Work limit reached'
+    break
+  end
   sleep 60
 end
