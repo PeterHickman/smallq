@@ -89,7 +89,7 @@ module Smallq
         rescue => e
           tries -= 1
           puts 'retry connection'
-          sleep 1
+          sleep 4 - tries
         end
       end
 
