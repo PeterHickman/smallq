@@ -83,4 +83,4 @@ This returns a list of all the known queues (those that have had messages added 
 * The server closes the connection after a request is made rather than holding the connection open. This is because it expects little traffic and a lot of idle time. Holding connections open consumes resources needlessly for no significant gain
 * The message id is unique to the message regardless of the queue. It will be greater than the previous id. Each time the server starts it sets the first message id to the server's current time in seconds. Each subsequent id will be 1 more. If the server is restarted then there will be a gap in the ids. This is a cheap way of getting unique ids. Do not try and make use of this implementation detail
 * The server is a monolith. It does not cluster, replicate, shard, federate or do the master slave thing. It will not scale beyond a single server
-* If the client goes down before it processes the message the message is lost
+* If the client goes down before it processes the message the message is lost. This is probably the other source of complexity that other implementations have
