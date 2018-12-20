@@ -4,38 +4,36 @@ module Smallq
       @message_id = Time.now.to_i
       @message_id_mutex = Mutex.new
 
-      @q = {}
+      @queues = {}
     end
 
     def add(queue_name, message)
       new_message_id = nil
 
-      unless @q.key?(queue_name)
-        @q[queue_name] = new_queue
-      end
+      @queues[queue_name] = new_queue unless @queues.key?(queue_name)
 
       @message_id_mutex.synchronize do
         new_message_id = @message_id
         @message_id += 1
       end
 
-      @q[queue_name][:mutex].synchronize do
-        @q[queue_name][:data] << { id: new_message_id, message: message }
-        @q[queue_name][:adds] += 1
-        @q[queue_name][:last_used] = Time.now.to_i
+      @queues[queue_name][:mutex].synchronize do
+        @queues[queue_name][:data] << { id: new_message_id, message: message }
+        @queues[queue_name][:adds] += 1
+        @queues[queue_name][:last_used] = Time.now.to_i
       end
 
       new_message_id
     end
 
     def get(queue_name)
-      return nil unless @q.key?(queue_name)
+      return nil unless @queues.key?(queue_name)
 
-      @q[queue_name][:mutex].synchronize do
-        if @q[queue_name][:data].any?
-          @q[queue_name][:gets] += 1
-          @q[queue_name][:last_used] = Time.now.to_i
-          return @q[queue_name][:data].shift
+      @queues[queue_name][:mutex].synchronize do
+        if @queues[queue_name][:data].any?
+          @queues[queue_name][:gets] += 1
+          @queues[queue_name][:last_used] = Time.now.to_i
+          return @queues[queue_name][:data].shift
         end
       end
 
@@ -43,11 +41,9 @@ module Smallq
     end
 
     def stats
-      l = []
-      @q.each do |queue_name, queue|
-        l << [queue_name, queue[:adds], queue[:gets], queue[:data].size, queue[:last_used]]
+      @queues.map do |queue_name, queue|
+        [queue_name, queue[:adds], queue[:gets], queue[:data].size, queue[:last_used]]
       end
-      l
     end
 
     private
