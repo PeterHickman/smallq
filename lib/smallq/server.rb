@@ -5,6 +5,9 @@ require 'smallq/queue_manager'
 
 module Smallq
   class Server
+    MESSAGE_ID=0
+    MESSAGE_BODY=1
+
     def initialize(host, port)
       @host = host
       @port = port
@@ -29,7 +32,7 @@ module Smallq
             when 'GET'
               r = qm.get(m[1])
               if r
-                both(client, 'GET', "OK #{r[:id]} #{r[:message]}")
+                both(client, 'GET', "OK #{r[MESSAGE_ID]} #{r[MESSAGE_BODY]}")
               else
                 both(client, 'GET', 'ERROR QUEUE EMPTY')
               end
