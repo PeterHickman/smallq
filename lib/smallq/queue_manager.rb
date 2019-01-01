@@ -12,12 +12,20 @@ module Smallq
 
       @queues[queue_name] = new_queue unless @queues.key?(queue_name)
 
-      @message_id_mutex.synchronize do
-        new_message_id = @message_id
-        @message_id += 1
-      end
-
+      ##
+      # This mutex is to ensure that no one else accesses the named
+      # queue when we update it
+      ##
       @queues[queue_name][:mutex].synchronize do
+        ##
+        # This mutex ensures that the message id is unique across
+        # all the queues
+        ##
+        @message_id_mutex.synchronize do
+          new_message_id = @message_id
+          @message_id += 1
+        end
+
         @queues[queue_name][:data] << { id: new_message_id, message: message }
         @queues[queue_name][:adds] += 1
         @queues[queue_name][:last_used] = Time.now.to_i
