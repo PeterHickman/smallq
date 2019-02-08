@@ -27,8 +27,13 @@ WORK_QUEUE = 'available'
 RESULTS_QUEUE = 'results'
 
 require 'smallq/client'
+require 'smallq/config'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 loop do
   GC.start

@@ -10,9 +10,9 @@ module Smallq
   class Client
     QUEUE_NAME_REGEX = /\A[a-zA-Z0-9_\-\.]{2,30}\z/
 
-    def initialize(hostname, port)
-      @hostname = hostname
-      @port = port
+    def initialize(config)
+      @host = config['host']
+      @port = config['port']
     end
 
     def add(queue_name, message)
@@ -84,7 +84,7 @@ module Smallq
 
       while tries != 0
         begin
-          s = TCPSocket.open(@hostname, @port)
+          s = TCPSocket.open(@host, @port)
           tries = 0
         rescue => e
           tries -= 1

@@ -11,6 +11,7 @@ ALLOCATION_MULTIPLIER = 2
 STEP = 999_999
 
 require 'smallq/client'
+require 'smallq/config'
 
 def queue_details(c)
   r = c.stats
@@ -22,14 +23,18 @@ def queue_details(c)
   {}
 end
 
-limit = ARGV[0]
+limit = ARGV[1]
 if limit
   limit = limit.to_i
 else
   limit = 30
 end
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 logger = Logger.new(STDERR)
 

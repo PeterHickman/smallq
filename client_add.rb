@@ -21,13 +21,19 @@ class Progress
 end
 
 require 'smallq/client'
+require 'smallq/config'
 
-number_of_messages = ARGV[0].to_i
+number_of_messages = ARGV[1].to_i
 
 TEST_MESSAGE = 'Test message'
 QUEUE = 'test_queue'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
+
 p = Progress.new(1, number_of_messages)
 t1 = Time.now
 

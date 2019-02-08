@@ -3,10 +3,15 @@
 $LOAD_PATH << './lib'
 
 require 'smallq/client'
+require 'smallq/config'
 
 QUEUE = 'test_queue'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 count = 0
 

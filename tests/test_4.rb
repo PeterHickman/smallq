@@ -8,9 +8,15 @@ QUEUE_2 = 'fred'
 QUEUE_3 = 'albert'
 
 require 'smallq/client'
+require 'smallq/config'
+
 require 'test_helper'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 drain_queues(c)
 

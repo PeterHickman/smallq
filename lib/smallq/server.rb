@@ -8,9 +8,9 @@ module Smallq
     MESSAGE_ID=0
     MESSAGE_BODY=1
 
-    def initialize(host, port)
-      @host = host
-      @port = port
+    def initialize(config)
+      @host = config['host']
+      @port = config['port']
     end
 
     def run

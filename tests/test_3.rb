@@ -4,9 +4,15 @@
 $LOAD_PATH << './lib'
 
 require 'smallq/client'
+require 'smallq/config'
+
 require 'test_helper'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 puts 'Make sure the server is running'
 puts '-------------------------------'
