@@ -18,12 +18,23 @@ For the server to be robust and fast it will do the least to get the job done. A
 
 It means of course that the server is vulnerable to the client getting things wrong. But it is a valid trade-off
 
+## The config file
+
+Everything is configured in he config file. Which is a simple YAML document
+
+```yaml
+server:
+  host: localhost
+  port: 2000
+```
+
+In the following examples this file is called `smallq.yml`
+
 ## Usage - the server
 
 All you need to do, at this point, is run the server code
 
-	$ ./server.rb
-The host is hardcoded as `localhost` and the port to `2000`
+	$ ./server.rb smallq.yml
 
 ## Usage - the client
 #### Queue names
@@ -36,8 +47,13 @@ There are all of three commands
 ### Add
 ```ruby
 require 'smallq/client'
+require 'smallq/config'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 r = c.add('queue_name', 'My first message')
 
@@ -48,8 +64,13 @@ The `:status` should always be`OK` but check it anyway, the `:id` is the id that
 ### Get
 ```ruby
 require 'smallq/client'
+require 'smallq/config'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 r = c.get('queue_name')
 
@@ -59,8 +80,13 @@ If there is something in the queue then `:status` will be `OK`, `:id` will be th
 ### Stats
 ```ruby
 require 'smallq/client'
+require 'smallq/config'
 
-c = Smallq::Client.new('localhost', 2000)
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
 
 r = c.stats
 
