@@ -23,6 +23,7 @@ until x[:status] == 'ERROR'
   count += 1
   x = c.get(QUEUE)
 end
+c.quit
 
 t2 = Time.now
 

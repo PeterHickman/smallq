@@ -42,6 +42,8 @@ number_of_messages.times do
   p.inc
   p.draw
 end
+c.quit
+
 puts
 
 t2 = Time.now
