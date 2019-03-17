@@ -13,6 +13,8 @@ module Smallq
     def initialize(config)
       @host = config['host']
       @port = config['port']
+
+      @socket = connect
     end
 
     def add(queue_name, message)
@@ -61,6 +63,8 @@ module Smallq
 
       unless r.nil?
         r.each do |x|
+          next if x.index('OK') == 0
+
           x = x.chomp.split(' ')
 
           l << { queue_name: x[0], adds: x[1].to_i, gets: x[2].to_i, size: x[3].to_i, last_used: x[4].to_i }
@@ -70,31 +74,17 @@ module Smallq
       l
     end
 
+    def quit
+      command('QUIT')
+    end
+
     private
 
+    def connect
+      TCPSocket.open(@host, @port)
+    end
+
     def command(message)
-      GC.disable
-
-      ##
-      # First lets see if we can even connect
-      ##
-
-      tries = 3
-      s = nil
-
-      while tries != 0
-        begin
-          s = TCPSocket.open(@host, @port)
-          tries = 0
-        rescue => e
-          tries -= 1
-          puts 'retry connection'
-          sleep 4 - tries
-        end
-      end
-
-      return nil if s.nil?
-
       ##
       # Now try and execute the command
       ##
@@ -103,9 +93,11 @@ module Smallq
       while tries != 0
         begin
           l = []
-          s.puts message
-          while m = s.gets
+          @socket.puts message
+          while m = @socket.gets
             l << m
+            break if m.index('OK') == 0
+            break if m.index('ERROR') == 0
           end
           tries = 0
         rescue => e
@@ -115,8 +107,6 @@ module Smallq
           sleep 1
         end
       end
-
-      GC.enable
 
       return l
     end
