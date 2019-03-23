@@ -20,7 +20,7 @@ It means of course that the server is vulnerable to the client getting things wr
 
 ## The config file
 
-Everything is configured in he config file. Which is a simple YAML document
+Everything is configured in the config file. Which is a simple YAML document
 
 ```yaml
 server:
@@ -43,7 +43,7 @@ Messages are added to named queues, the queue will be created once a message is 
 #### Message body
 The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or encode it with something like `base64` when you go to add it and unescape or decode when you get it off the queue
 
-There are all of three commands
+There are all of four commands
 ### Add
 ```ruby
 require 'smallq/client'
@@ -60,7 +60,7 @@ r = c.add('queue_name', 'My first message')
 r => {:status=>"OK", :id=>1542545179}
 ```
 
-The `:status` should always be`OK` but check it anyway, the `:id` is the id that the message was given. It could be useful for logging should something go wrong but status is the important part
+The `:status` should always be `OK` but check it anyway, the `:id` is the id that the message was given. It could be useful for logging should something go wrong but status is the important part
 ### Get
 ```ruby
 require 'smallq/client'
@@ -104,9 +104,28 @@ This returns a list of all the known queues (those that have had messages added 
 * `:size` The number of messages currently in the queue
 * `:last_used` The last time that the queue was added to or read from
 
+### Quit
+The server holds the connection between the client and the server open all the time. When you no longer want to connect you should issue the `quit` command to disconnect
+
+```ruby
+require 'smallq/client'
+require 'smallq/config'
+
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+c = Smallq::Client.new(config['server'])
+
+(1..10).each do |index|
+  c.add('general', "This is message #{i}")
+end
+
+c.quit()
+```
+
 ## Limitations and issues
 * The server has no concept of a user. If you can connect then you can add and get on any queue. If you cannot trust, or need to limit, your users then this system is not for you. I suspect that this is one of the places that the complexity of other implementations come from
-* The server closes the connection after a request is made rather than holding the connection open. This is because it expects little traffic and a lot of idle time. Holding connections open consumes resources needlessly for no significant gain
 * The message id is unique to the message regardless of the queue. It will be greater than the previous id. Each time the server starts it sets the first message id to the server's current time in seconds. Each subsequent id will be 1 more. If the server is restarted then there will be a gap in the ids. This is a cheap way of getting unique ids. Do not try and make use of this implementation detail
 * The server is a monolith. It does not cluster, replicate, shard, federate or do the master slave thing. It will not scale beyond a single server
 * If the client goes down before it processes the message the message is lost. This is probably the other source of complexity that other implementations have
