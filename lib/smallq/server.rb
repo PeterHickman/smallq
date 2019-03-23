@@ -47,7 +47,7 @@ module Smallq
               when 'QUIT'
                 break
               else
-                both(client, 'STATS', 'ERROR UNKNOWN COMMAND')
+                both(client, m[0], 'ERROR UNKNOWN COMMAND')
               end
             rescue => e
               both(client, 'ERROR', "ERROR #{e}")
