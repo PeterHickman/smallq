@@ -33,33 +33,33 @@ filename = ARGV[0]
 
 config = Smallq::Config.load(filename)
 
-c = Smallq::Client.new(config['server'])
+Smallq::Client.new(config['server']) do |c|
+  loop do
+    GC.start
 
-loop do
-  GC.start
+    x = c.get(WORK_QUEUE)
 
-  x = c.get(WORK_QUEUE)
+    if x[:status] == 'OK'
+      puts "Got work id##{x[:id]} #{x[:message]}"
 
-  if x[:status] == 'OK'
-    puts "Got work id##{x[:id]} #{x[:message]}"
+      t1 = Time.now
 
-    t1 = Time.now
-
-    f, t = x[:message].split(/\s+/).map(&:to_i)
-    p = Progress.new(f, t)
-    (f..t).each do |i|
-      p.draw
-      p.inc
-      if Prime.prime?(i)
-        c.add(RESULTS_QUEUE, i.to_s)
+      f, t = x[:message].split(/\s+/).map(&:to_i)
+      p = Progress.new(f, t)
+      (f..t).each do |i|
+        p.draw
+        p.inc
+        if Prime.prime?(i)
+          c.add(RESULTS_QUEUE, i.to_s)
+        end
       end
-    end
 
-    t2 = Time.now
+      t2 = Time.now
     
-    puts "Processed #{t - f + 1} values in #{t2 - t1} seconds"
-  else
-    puts 'Waiting for work'
-    sleep 10
+      puts "Processed #{t - f + 1} values in #{t2 - t1} seconds"
+    else
+      puts 'Waiting for work'
+      sleep 10
+    end
   end
 end

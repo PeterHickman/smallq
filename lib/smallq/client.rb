@@ -15,6 +15,10 @@ module Smallq
       @port = config['port']
 
       @socket = connect
+
+      yield self
+
+      quit
     end
 
     def add(queue_name, message)
@@ -74,11 +78,11 @@ module Smallq
       l
     end
 
+    private
+
     def quit
       command('QUIT')
     end
-
-    private
 
     def connect
       TCPSocket.open(@host, @port)

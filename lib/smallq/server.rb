@@ -11,6 +11,9 @@ module Smallq
     def initialize(config)
       @host = config['host']
       @port = config['port']
+
+      @connections = 0
+      @connections_mutex = Mutex.new
     end
 
     def run
@@ -22,6 +25,14 @@ module Smallq
 
       loop do
         Thread.start(server.accept) do |client|
+          this_connection = 0
+          @connections_mutex.synchronize do
+            this_connection = @connections
+            @connections += 1
+          end
+
+          puts "Connection ##{this_connection} opened from #{client.peeraddr}"
+
           loop do
             begin
               s = client.gets
@@ -55,6 +66,8 @@ module Smallq
               break
             end
           end
+
+          puts "Connection ##{this_connection} closed"
 
           client.close
         end

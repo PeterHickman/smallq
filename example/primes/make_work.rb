@@ -34,36 +34,36 @@ filename = ARGV[0]
 
 config = Smallq::Config.load(filename)
 
-c = Smallq::Client.new(config['server'])
-
 logger = Logger.new(STDERR)
 
 logger.info "Work limit is #{limit}"
 
-f = 1
+Smallq::Client.new(config['server']) do |c|
+  f = 1
 
-loop do
-  d = queue_details(c)
+  loop do
+    d = queue_details(c)
 
-  size = d[:size] || 0
+    size = d[:size] || 0
 
-  logger.info "Queue #{QUEUE_NAME} size = #{size}"
+    logger.info "Queue #{QUEUE_NAME} size = #{size}"
 
-  if size < MINIMUM_QUEUE_SIZE
-    logger.info "Adding #{MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER} new items"
+    if size < MINIMUM_QUEUE_SIZE
+      logger.info "Adding #{MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER} new items"
 
-    (MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER).times do
-      t = f + STEP
-      c.add(QUEUE_NAME, "#{f} #{t}")
-      f = t + 1
+      (MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER).times do
+        t = f + STEP
+        c.add(QUEUE_NAME, "#{f} #{t}")
+        f = t + 1
+      end
     end
-  end
 
-  d = queue_details(c)
+    d = queue_details(c)
 
-  if d[:adds] > limit
-    logger.info 'Work limit reached'
-    break
+    if d[:adds] > limit
+      logger.info 'Work limit reached'
+      break
+    end
+    sleep 60
   end
-  sleep 60
 end
