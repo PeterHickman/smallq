@@ -8,9 +8,11 @@ module Smallq
     MESSAGE_ID=0
     MESSAGE_BODY=1
 
-    def initialize(config)
+    def initialize(config, logger)
       @host = config['host']
       @port = config['port']
+
+      @logger = logger
 
       @connections = 0
       @connections_mutex = Mutex.new
@@ -21,7 +23,7 @@ module Smallq
 
       qm = Smallq::QueueManager.new
 
-      puts 'Starting up'
+      @logger.info 'Starting up'
 
       loop do
         Thread.start(server.accept) do |client|
@@ -31,7 +33,7 @@ module Smallq
             @connections += 1
           end
 
-          puts "Connection ##{this_connection} opened from #{client.peeraddr}"
+          @logger.info "Connection ##{this_connection} opened from #{client.peeraddr}"
 
           loop do
             begin
@@ -67,7 +69,7 @@ module Smallq
             end
           end
 
-          puts "Connection ##{this_connection} closed"
+          @logger.info "Connection ##{this_connection} closed"
 
           client.close
         end
