@@ -16,7 +16,13 @@ module Smallq
 
       @socket = connect
 
-      yield self
+      begin
+        yield self
+      rescue Interrupt
+        # Probably ^C
+      rescue
+        # Probably a bug
+      end
 
       quit
     end
