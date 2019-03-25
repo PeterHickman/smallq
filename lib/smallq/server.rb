@@ -23,7 +23,7 @@ module Smallq
 
       qm = Smallq::QueueManager.new
 
-      @logger.info 'Starting up'
+      @logger.log 'Starting up'
 
       loop do
         Thread.start(server.accept) do |client|
@@ -33,7 +33,7 @@ module Smallq
             @connections += 1
           end
 
-          @logger.info "Connection ##{this_connection} opened from #{client.peeraddr}"
+          @logger.log "Connection ##{this_connection} opened from #{client.peeraddr}"
 
           loop do
             begin
@@ -69,7 +69,7 @@ module Smallq
             end
           end
 
-          @logger.info "Connection ##{this_connection} closed"
+          @logger.log "Connection ##{this_connection} closed"
 
           client.close
         end
