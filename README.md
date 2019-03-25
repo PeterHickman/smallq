@@ -26,9 +26,13 @@ Everything is configured in the config file. Which is a simple YAML document
 server:
   host: localhost
   port: 2000
+logger:
+  enabled: true
+  path: ./server.log
+  console: true
 ```
 
-In the following examples this file is called `smallq.yml`
+The `logger` section is for the server's logging. If `enabled` is `true` then the output will be written to `path`. Regardless if `console` is `true` log messages will (also) be written to the console. In the following examples this file is called `smallq.yml`
 
 ## Usage - the server
 
