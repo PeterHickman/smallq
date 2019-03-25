@@ -26,13 +26,24 @@ Everything is configured in the config file. Which is a simple YAML document
 server:
   host: localhost
   port: 2000
+  cleanup_every: 15
 logger:
   enabled: true
   path: ./server.log
   console: true
 ```
 
-The `logger` section is for the server's logging. If `enabled` is `true` then the output will be written to `path`. Regardless if `console` is `true` log messages will (also) be written to the console. In the following examples this file is called `smallq.yml`
+The `server` section is the `host` and `port` that the server will listen on or the client will connect to. A client application need only have 3 lines ...
+
+```yaml
+server:
+  host: localhost
+  port: 2000
+```
+
+everything else belongs to the server. The `cleanup_every` element is the number of seconds that the house keeping routine will sleep for. In this example it will kick in every 15 seconds and remove empty queues. Queues can be created on the fly and could, in theory, just build up after use. Only empty queues will be 
+
+The `logger` section is for the server's logging. If `enabled` is `true` then the output will be written to `path`. If `console` is `true` log messages will (also) be written to the console. In the following examples this file is called `smallq.yml`
 
 ## Usage - the server
 
@@ -45,9 +56,10 @@ All you need to do, at this point, is run the server code
 Messages are added to named queues, the queue will be created once a message is added to it. Gets from non-existant queues will not create the queue. Queue names are 2 to 30 characters long consisting to `a-z`, upper and lower case, `0-9`, `-`, `_` and `.`. The range of valid characters may expand in the future
 
 #### Message body
-The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or encode it with something like `base64` when you go to add it and unescape or decode when you get it off the queue
+The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or encode it with something like `base64` when you add it and unescape or decode when you get it off the queue
 
-There are all of three commands. The way the client is used is a little less usual. This is because the client needs to close the connection to the server. This form allows the client to take care of it without relying on the programmer to remember to close the connection themselves
+#### The client code
+The way the client is used is a little less usual. This is because the client needs to close the connection to the server. This form allows the client to take care of it without relying on the programmer to remember to close the connection themselves
 
 ### Add
 ```ruby
