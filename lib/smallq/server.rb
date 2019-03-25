@@ -9,8 +9,9 @@ module Smallq
     MESSAGE_BODY=1
 
     def initialize(config, logger)
-      @host = config['host']
-      @port = config['port']
+      @host          = config['host']
+      @port          = config['port']
+      @cleanup_every = config['cleanup_every']
 
       @logger = logger
 
@@ -21,9 +22,16 @@ module Smallq
     def run
       server = TCPServer.new(@host, @port)
 
-      qm = Smallq::QueueManager.new
+      qm = Smallq::QueueManager.new(@logger)
 
       @logger.log 'Starting up'
+
+      Thread.start do 
+        loop do
+          qm.house_keeping
+          sleep @cleanup_every
+        end
+      end
 
       loop do
         Thread.start(server.accept) do |client|

@@ -1,6 +1,7 @@
 server:
     host: 127.0.0.1
     port: 2000
+    cleanup_every: 5
 logger:
     enabled: true
     path: ./server.log

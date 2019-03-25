@@ -6,7 +6,9 @@ module Smallq
     QUEUE_LAST_USED=3
     QUEUE_DATA=4
 
-    def initialize
+    def initialize(logger)
+      @logger = logger
+
       @message_id = Time.now.to_i
       @message_id_mutex = Mutex.new
 
@@ -57,6 +59,15 @@ module Smallq
     def stats
       @queues.map do |queue_name, queue|
         [queue_name, queue[QUEUE_ADDS], queue[QUEUE_GETS], queue[QUEUE_DATA].size, queue[QUEUE_LAST_USED]]
+      end
+    end
+
+    def house_keeping
+      @queues.each do |queue_name, data|
+        next if data.last.any?
+
+        @logger.log "house_keeping queue [#{queue_name}] is empty"
+        @queues.delete(queue_name)
       end
     end
   end
