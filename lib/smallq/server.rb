@@ -27,7 +27,7 @@ module Smallq
 
       @logger.log 'Starting up'
 
-      Thread.start do 
+      Thread.start do
         loop do
           qm.house_keeping(@idle_for)
           sleep @cleanup_every
@@ -47,7 +47,7 @@ module Smallq
           loop do
             begin
               s = client.gets
-              next if s.nil?
+              break if s.nil?
               m = s.chomp.split(' ', 3)
 
               case m[0]
