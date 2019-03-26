@@ -27,6 +27,7 @@ server:
   host: localhost
   port: 2000
   cleanup_every: 15
+  idle_for: 60
 logger:
   enabled: true
   path: ./server.log
@@ -41,7 +42,7 @@ server:
   port: 2000
 ```
 
-everything else belongs to the server. The `cleanup_every` element is the number of seconds that the house keeping routine will sleep for. In this example it will kick in every 15 seconds and remove empty queues. Queues can be created on the fly and could, in theory, just build up after use. Only empty queues will be 
+everything else belongs to the server. The `cleanup_every` element is the number of seconds that the house keeping routine will sleep for. In this example it will kick in every 15 seconds and remove empty queues that have not been updated in `idle_for` seconds. Queues can be created on the fly and could, in theory, just build up after use. Only empty queues will be removed
 
 The `logger` section is for the server's logging. If `enabled` is `true` then the output will be written to `path`. If `console` is `true` log messages will (also) be written to the console. In the following examples this file is called `smallq.yml`
 

@@ -2,6 +2,7 @@ server:
     host: 127.0.0.1
     port: 2000
     cleanup_every: 15
+    idle_for: 60
 logger:
     enabled: true
     path: ./server.log

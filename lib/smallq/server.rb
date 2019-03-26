@@ -12,6 +12,7 @@ module Smallq
       @host          = config['host']
       @port          = config['port']
       @cleanup_every = config['cleanup_every']
+      @idle_for      = config['idle_for']
 
       @logger = logger
 
@@ -28,7 +29,7 @@ module Smallq
 
       Thread.start do 
         loop do
-          qm.house_keeping
+          qm.house_keeping(@idle_for)
           sleep @cleanup_every
         end
       end
