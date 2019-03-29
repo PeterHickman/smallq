@@ -68,7 +68,7 @@ module Smallq
       @queues.each do |queue_name, data|
         next if data[QUEUE_DATA].any?
         next if data[QUEUE_LAST_USED] > cutoff
-        @logger.log "house_keeping queue [#{queue_name}] is deleted"
+        @logger.log "house_keeping queue [#{queue_name}] deleted. Empty for #{idle_for} seconds"
         @queues.delete(queue_name)
       end
     end
