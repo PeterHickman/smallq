@@ -36,12 +36,12 @@ p = Progress.new(1, number_of_messages)
 
 t1 = Time.now
 
-Smallq::Client.new(config['server']) do |c|
-  number_of_messages.times do
-    c.add(QUEUE, TEST_MESSAGE)
-    p.inc
-    p.draw
-  end
+c = Smallq::Client.new(config['server'])
+
+number_of_messages.times do
+  c.add(QUEUE, TEST_MESSAGE)
+  p.inc
+  p.draw
 end
 
 puts

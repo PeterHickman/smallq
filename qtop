@@ -18,40 +18,40 @@ filename = ARGV[0]
 
 config = Smallq::Config.load(filename)
 
-Smallq::Client.new(config['server']) do |c|
-  a = stats(c)
-  old_a = {}
-  now = nil
-  old_now = nil
+c = Smallq::Client.new(config['server'])
 
-  loop do
-    now = Time.now
+a = stats(c)
+old_a = {}
+now = nil
+old_now = nil
 
-    if a.any?
-      max = a.keys.map(&:size).max
-      max = 8 if max < 8
+loop do
+  now = Time.now
 
-      puts "%-#{max}s |       adds |       gets |       size |        TPS" % now.strftime('%H:%M:%S')
-      puts "#{'-' * max}-+------------+------------+------------+-----------"
-      a.each do |q, data|
-        if old_now.nil? || old_a[q].nil?
-          puts "%-#{max}s | %10d | %10d | %10d |          -" % [q, data[:adds], data[:gets], data[:size]]
-        else
-          diff = now - old_now
-          total = (data[:adds] - old_a[q][:adds]) + (data[:gets] - old_a[q][:gets])
-          puts "%-#{max}s | %10d | %10d | %10d | %10.2f" % [q, data[:adds], data[:gets], data[:size], total.to_f / diff]
-        end
+  if a.any?
+    max = a.keys.map(&:size).max
+    max = 8 if max < 8
+
+    puts "%-#{max}s |       adds |       gets |       size |        TPS" % now.strftime('%H:%M:%S')
+    puts "#{'-' * max}-+------------+------------+------------+-----------"
+    a.each do |q, data|
+      if old_now.nil? || old_a[q].nil?
+        puts "%-#{max}s | %10d | %10d | %10d |          -" % [q, data[:adds], data[:gets], data[:size]]
+      else
+        diff = now - old_now
+        total = (data[:adds] - old_a[q][:adds]) + (data[:gets] - old_a[q][:gets])
+        puts "%-#{max}s | %10d | %10d | %10d | %10.2f" % [q, data[:adds], data[:gets], data[:size], total.to_f / diff]
       end
-    else
-      puts 'No currently active queues'
     end
-
-    puts
-  
-    sleep 5
-    old_a = a
-    a = stats(c)
-
-    old_now = now
+  else
+    puts 'No currently active queues'
   end
+
+  puts
+
+  sleep 5
+  old_a = a
+  a = stats(c)
+
+  old_now = now
 end

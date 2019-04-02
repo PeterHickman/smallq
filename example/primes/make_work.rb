@@ -38,32 +38,32 @@ logger = Logger.new(STDERR)
 
 logger.info "Work limit is #{limit}"
 
-Smallq::Client.new(config['server']) do |c|
-  f = 1
+c = mallq::Client.new(config['server'])
 
-  loop do
-    d = queue_details(c)
+f = 1
 
-    size = d[:size] || 0
+loop do
+  d = queue_details(c)
 
-    logger.info "Queue #{QUEUE_NAME} size = #{size}"
+  size = d[:size] || 0
 
-    if size < MINIMUM_QUEUE_SIZE
-      logger.info "Adding #{MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER} new items"
+  logger.info "Queue #{QUEUE_NAME} size = #{size}"
 
-      (MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER).times do
-        t = f + STEP
-        c.add(QUEUE_NAME, "#{f} #{t}")
-        f = t + 1
-      end
+  if size < MINIMUM_QUEUE_SIZE
+    logger.info "Adding #{MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER} new items"
+
+    (MINIMUM_QUEUE_SIZE * ALLOCATION_MULTIPLIER).times do
+      t = f + STEP
+      c.add(QUEUE_NAME, "#{f} #{t}")
+      f = t + 1
     end
-
-    d = queue_details(c)
-
-    if d[:adds] > limit
-      logger.info 'Work limit reached'
-      break
-    end
-    sleep 60
   end
+
+  d = queue_details(c)
+
+  if d[:adds] > limit
+    logger.info 'Work limit reached'
+    break
+  end
+  sleep 60
 end

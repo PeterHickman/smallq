@@ -16,15 +16,15 @@ module Smallq
 
       @socket = connect
 
-      begin
-        yield self
-      rescue Interrupt
-        # Probably ^C
-      rescue
-        # Probably a bug
-      end
-
-      quit
+      # begin
+      #   yield self
+      # rescue Interrupt
+      #   # Probably ^C
+      # rescue
+      #   # Probably a bug
+      # end
+      # 
+      # quit
     end
 
     def add(queue_name, message)
@@ -86,9 +86,9 @@ module Smallq
 
     private
 
-    def quit
-      command('QUIT')
-    end
+    # def quit
+    #   command('QUIT')
+    # end
 
     def connect
       TCPSocket.open(@host, @port)

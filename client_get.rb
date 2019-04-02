@@ -15,13 +15,13 @@ count = 0
 
 t1 = Time.now
 
-Smallq::Client.new(config['server']) do |c|
-  x = c.get(QUEUE)
+c = Smallq::Client.new(config['server'])
 
-  until x[:status] == 'ERROR'
-    count += 1
-    x = c.get(QUEUE)
-  end
+x = c.get(QUEUE)
+
+until x[:status] == 'ERROR'
+  count += 1
+  x = c.get(QUEUE)
 end
 
 t2 = Time.now
