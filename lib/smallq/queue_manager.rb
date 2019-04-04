@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module Smallq
   class QueueManager
     QUEUE_MUTEX=0
@@ -6,13 +8,19 @@ module Smallq
     QUEUE_LAST_USED=3
     QUEUE_DATA=4
 
-    def initialize(logger)
+    def initialize(config, logger)
       @logger = logger
 
       @message_id = Time.now.to_i
       @message_id_mutex = Mutex.new
 
       @queues = {}
+
+      @journal_enabled = config['enabled']
+      @journal_path    = config['path']
+      @journal_every   = config['every']
+
+      setup_journal
     end
 
     def add(queue_name, message)
@@ -68,8 +76,27 @@ module Smallq
       @queues.each do |queue_name, data|
         next if data[QUEUE_DATA].any?
         next if data[QUEUE_LAST_USED] > cutoff
-        @logger.log "house_keeping queue [#{queue_name}] deleted. Empty for #{idle_for} seconds"
+        @logger.log('QMANAGER', "Queue [#{queue_name}] deleted. Empty for #{idle_for} seconds")
         @queues.delete(queue_name)
+      end
+    end
+
+    private
+
+    def setup_journal
+      return unless @journal_enabled
+
+      FileUtils.mkdir_p @journal_path unless File.directory?(@journal_path)
+
+      @logger.log('QMANAGER', 'Read the journal files')
+
+      # TODO: Read the existing snapshot and journal here
+
+      Thread.start do
+        loop do
+          sleep @journal_every
+          @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+        end
       end
     end
   end
