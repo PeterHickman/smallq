@@ -10,10 +10,10 @@ module Smallq
       end
     end
 
-    def log(message)
+    def log(klass, message)
       return if @logger.nil? && !@console
 
-      text = "#{Time.now.strftime('%Y-%m-%d %H:%M:%S.%6N')} #{message}"
+      text = "#{Time.now.strftime('%Y-%m-%d %H:%M:%S.%6N')} [#{klass}] #{message}"
 
       @logger.puts text if @logger
       puts text if @console
