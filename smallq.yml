@@ -7,3 +7,7 @@ logger:
     enabled: true
     path: ./server.log
     console: true
+journal:
+    enabled: true
+    path: ./journal
+    every: 60
