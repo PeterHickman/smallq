@@ -1,20 +1,20 @@
 require 'socket'
 require 'thread'
 
-require 'smallq/queue_manager'
-
 module Smallq
   class Server
     MESSAGE_ID=0
     MESSAGE_BODY=1
 
-    def initialize(config, logger)
+    def initialize(config, logger, qm)
       @host          = config['host']
       @port          = config['port']
       @cleanup_every = config['cleanup_every']
       @idle_for      = config['idle_for']
 
       @logger = logger
+
+      @qm = qm
 
       @connections = 0
       @connections_mutex = Mutex.new
@@ -23,13 +23,11 @@ module Smallq
     def run
       server = TCPServer.new(@host, @port)
 
-      qm = Smallq::QueueManager.new(@logger)
-
-      @logger.log 'Starting up'
+      @logger.log('SERVER', 'Server starting up')
 
       Thread.start do
         loop do
-          qm.house_keeping(@idle_for)
+          @qm.house_keeping(@idle_for)
           sleep @cleanup_every
         end
       end
@@ -42,7 +40,7 @@ module Smallq
             @connections += 1
           end
 
-          @logger.log "Connection ##{this_connection} opened from #{client.peeraddr}"
+          @logger.log('SERVER', "Connection ##{this_connection} opened from #{client.peeraddr}")
 
           loop do
             begin
@@ -52,17 +50,17 @@ module Smallq
 
               case m[0]
               when 'ADD'
-                i = qm.add(m[1], m[2])
+                i = @qm.add(m[1], m[2])
                 both(client, 'ADD', "OK #{i}")
               when 'GET'
-                r = qm.get(m[1])
+                r = @qm.get(m[1])
                 if r
                   both(client, 'GET', "OK #{r[MESSAGE_ID]} #{r[MESSAGE_BODY]}")
                 else
                   both(client, 'GET', 'ERROR QUEUE EMPTY')
                 end
               when 'STATS'
-                qm.stats.each do |l|
+                @qm.stats.each do |l|
                   both(client, 'STATS', l.join(' '))
                 end
                 both(client, 'STATS', 'OK')
@@ -78,7 +76,7 @@ module Smallq
             end
           end
 
-          @logger.log "Connection ##{this_connection} closed"
+          @logger.log('SERVER', "Connection ##{this_connection} closed")
 
           client.close
         end
