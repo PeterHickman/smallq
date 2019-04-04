@@ -19,6 +19,7 @@ module Smallq
       @journal_enabled = config['enabled']
       @journal_path    = config['path']
       @journal_every   = config['every']
+      @journal_file    = nil
 
       setup_journal
     end
@@ -84,20 +85,55 @@ module Smallq
     private
 
     def setup_journal
-      return unless @journal_enabled
+      if @journal_enabled
+        FileUtils.mkdir_p @journal_path unless File.directory?(@journal_path)
 
-      FileUtils.mkdir_p @journal_path unless File.directory?(@journal_path)
+        @logger.log('QMANAGER', 'Read the journal files')
 
-      @logger.log('QMANAGER', 'Read the journal files')
+        # TODO: Read the existing snapshot and transactions here
 
-      # TODO: Read the existing snapshot and journal here
+        Thread.start do
+          loop do
+            sleep @journal_every
+            take_snapshot
+          end
+        end
 
-      Thread.start do
-        loop do
-          sleep @journal_every
-          @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+        ##
+        # It's easier and cleaner to just take a new snapshot
+        # and work from there rather than have all the parts
+        # scattered
+        ##
+        take_snapshot
+      else
+        @logger.log('QMANAGER', 'Journalling is disabled')
+      end
+    end
+
+    def take_snapshot
+      @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+
+      ts = Time.now.strftime('%Y%m%d-%H%M%S')
+
+      filename = "#{@journal_path}/snapshot.#{ts}"
+
+      f = File.new(filename, 'w')
+      t1 = Time.now
+      c = 0
+      @queues.keys.each do |queue_name|
+        @queues[queue_name][QUEUE_DATA].each do |message_id, message|
+          c += 1
+          f.puts "#{queue_name} #{message_id} #{message}"
         end
       end
+      t2 = Time.now
+      f.close
+      @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
+
+      @journal_file.close unless @journal_file.nil?
+      filename = "#{@journal_path}/transactions.#{ts}"
+      @journal_file = File.new(filename, 'w')
+      @journal_file.sync = true
     end
   end
 end
