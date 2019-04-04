@@ -7,12 +7,13 @@ $LOAD_PATH << './lib'
 require 'smallq/server'
 require 'smallq/config'
 require 'smallq/logger'
+require 'smallq/queue_manager'
 
 filename = ARGV[0]
 
-config = Smallq::Config.load(filename)
+c = Smallq::Config.load(filename)
 
-logger = Smallq::Logger.new(config['logger'])
-
-s = Smallq::Server.new(config['server'], logger)
+l = Smallq::Logger.new(c['logger'])
+q = Smallq::QueueManager.new(c['journal'], l)
+s = Smallq::Server.new(c['server'], l, q)
 s.run
