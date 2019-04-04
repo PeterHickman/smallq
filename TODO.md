@@ -5,6 +5,8 @@
 * Should the house keeping thread move into the QueueManager?
 
 ## Server
-* Should do some logging - but just how much?
 * Journalling to recover from crashes
+  * Purge old files
+  * Mutex to stop transactions being corrupted
+  * Write snapshot on server exit
 * The server to daemonise
