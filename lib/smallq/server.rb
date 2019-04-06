@@ -51,23 +51,23 @@ module Smallq
               case m[0]
               when 'ADD'
                 i = @qm.add(m[1], m[2])
-                both(client, 'ADD', "OK #{i}")
+                client.puts "OK #{i}"
               when 'GET'
                 r = @qm.get(m[1])
                 if r
-                  both(client, 'GET', "OK #{r[MESSAGE_ID]} #{r[MESSAGE_BODY]}")
+                  client.puts "OK #{r[MESSAGE_ID]} #{r[MESSAGE_BODY]}"
                 else
-                  both(client, 'GET', 'ERROR QUEUE EMPTY')
+                  client.puts 'ERROR QUEUE EMPTY'
                 end
               when 'STATS'
                 @qm.stats.each do |l|
-                  both(client, 'STATS', l.join(' '))
+                  client.puts l.join(' ')
                 end
-                both(client, 'STATS', 'OK')
+                client.puts 'OK'
               when 'QUIT'
                 break
               else
-                both(client, m[0], 'ERROR UNKNOWN COMMAND')
+                client.puts 'ERROR UNKNOWN COMMAND'
               end
             rescue => e
               both(client, 'ERROR', "ERROR #{e}")
@@ -81,13 +81,6 @@ module Smallq
           client.close
         end
       end
-    end
-
-    private
-
-    def both(client, command, message)
-      puts "#{command} #{message}"
-      client.puts message
     end
   end
 end
