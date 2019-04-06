@@ -48,6 +48,8 @@ module Smallq
         @queues[queue_name][QUEUE_LAST_USED] = Time.now.to_i
       end
 
+      transaction("#{new_message_id} #{queue_name} #{message}")
+
       new_message_id
     end
 
@@ -58,7 +60,9 @@ module Smallq
         if @queues[queue_name][QUEUE_DATA].any?
           @queues[queue_name][QUEUE_GETS] += 1
           @queues[queue_name][QUEUE_LAST_USED] = Time.now.to_i
-          return @queues[queue_name][QUEUE_DATA].shift
+          x = @queues[queue_name][QUEUE_DATA].shift
+          transaction(x.first) # The message id
+          return x
         end
       end
 
@@ -84,13 +88,22 @@ module Smallq
 
     private
 
+    def insert(queue_name, message_id, message)
+      @queues[queue_name] = [Mutex.new, 0, 0, 0, []] unless @queues.key?(queue_name)
+      
+      @queues[queue_name][QUEUE_DATA] << [message_id, message]
+    end
+
+    def transaction(text)
+      return unless @journal_enabled
+      @journal_file.puts text
+    end
+
     def setup_journal
       if @journal_enabled
         FileUtils.mkdir_p @journal_path unless File.directory?(@journal_path)
 
-        @logger.log('QMANAGER', 'Read the journal files')
-
-        # TODO: Read the existing snapshot and transactions here
+        reload_snapshot
 
         Thread.start do
           loop do
@@ -123,7 +136,7 @@ module Smallq
       @queues.keys.each do |queue_name|
         @queues[queue_name][QUEUE_DATA].each do |message_id, message|
           c += 1
-          f.puts "#{queue_name} #{message_id} #{message}"
+          f.puts "#{message_id} #{queue_name} #{message}"
         end
       end
       t2 = Time.now
@@ -134,6 +147,78 @@ module Smallq
       filename = "#{@journal_path}/transactions.#{ts}"
       @journal_file = File.new(filename, 'w')
       @journal_file.sync = true
+    end
+
+    def reload_snapshot
+      @logger.log('QMANAGER', 'Read the journal files')
+
+      snapshot, transactions, others = existing_snapshots
+
+      data = {}
+      missing_deletes = []
+
+      if snapshot
+        File.open(snapshot, 'r').each do |line|
+          message_id, queue_name, message = line.chomp.split(' ')
+          data[message_id] = [queue_name, message]
+        end
+      end
+
+      if transactions
+        File.open(transactions, 'r').each do |line|
+          message_id, queue_name, message = line.chomp.split(' ')
+          if queue_name.nil?
+            if x.key?(message_id)
+              x.delete(message_id)
+            else
+              missing_deletes << message_id
+            end
+          else
+            x[message_id] = [queue_name, message]
+          end
+        end
+      end
+
+      if missing_deletes.any?
+        missing_deletes.each do |message_id|
+          data.delete(message_id)
+        end
+      end
+
+      max_message_id = 0
+      data.each do |message_id, x|
+        max_message_id = message_id if message_id > max_message_id
+        queue_name, message = x
+        insert(queue_name, message_id.to_i, message)
+      end
+      @message_id = max_message_id + 1 unless max_message_id.zero?
+
+      @logger.log('QMANAGER', "New message id set to #{@message_id}")
+
+      @queues.each do |queue_name, x|
+        x[QUEUE_LAST_USED] = Time.now.to_i
+      end
+
+      others.each do |old_file|
+        @logger.log('QMANAGER', "Removing old file #{old_file}")
+        File.delete(old_file)
+      end
+    end
+
+    def existing_snapshots
+      snapshot = nil
+      transactions = nil
+      others = []
+
+      x = Dir["#{@journal_path}/snapshot.*"].sort
+      snapshot = x.pop
+      others += x
+
+      x = Dir["#{@journal_path}/transactions.*"].sort
+      transactions = x.pop
+      others += x
+
+      [snapshot, transactions, others]
     end
   end
 end
