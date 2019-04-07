@@ -16,4 +16,13 @@ c = Smallq::Config.load(filename)
 l = Smallq::Logger.new(c['logger'])
 q = Smallq::QueueManager.new(c['journal'], l)
 s = Smallq::Server.new(c['server'], l, q)
-s.run
+
+begin
+  s.run
+rescue => e
+  l.log('SERVER', "Exception: #{e}")
+rescue Interrupt => i
+  l.log('SERVER', 'Server interupted, shutting down')
+ensure
+  q.take_snapshot
+end
