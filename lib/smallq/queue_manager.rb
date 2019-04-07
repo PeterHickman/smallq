@@ -21,6 +21,8 @@ module Smallq
       @journal_every   = config['every']
       @journal_file    = nil
 
+      @transaction_write = Mutex.new
+
       setup_journal
     end
 
@@ -86,9 +88,45 @@ module Smallq
       end
     end
 
+    def take_snapshot
+      if @journal_enabled
+        @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+
+        ts = Time.now.strftime('%Y%m%d-%H%M%S')
+
+        filename = "#{@journal_path}/snapshot.#{ts}"
+
+        f = File.new(filename, 'w')
+        t1 = Time.now
+        c = 0
+        @queues.keys.each do |queue_name|
+          @queues[queue_name][QUEUE_DATA].each do |message_id, message|
+            c += 1
+            f.puts "#{message_id} #{queue_name} #{message}"
+          end
+        end
+        t2 = Time.now
+        f.close
+        @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
+
+        @journal_file.close unless @journal_file.nil?
+        filename = "#{@journal_path}/transactions.#{ts}"
+        @journal_file = File.new(filename, 'w')
+        @journal_file.sync = true
+      else
+        @logger.log('QMANAGER', 'Journalling disabled')
+      end
+    end
+
     private
 
     def insert(queue_name, message_id, message)
+      ##
+      # This method is similar to add but is only called
+      # by the reload_snapshot method to build the queues
+      # from the journals. So it doesn't need to handle
+      # mutexes or last accessed
+      ##
       @queues[queue_name] = [Mutex.new, 0, 0, 0, []] unless @queues.key?(queue_name)
       
       @queues[queue_name][QUEUE_DATA] << [message_id, message]
@@ -96,7 +134,17 @@ module Smallq
 
     def transaction(text)
       return unless @journal_enabled
-      @journal_file.puts text
+
+      ##
+      # Given that the application is threaded there exists
+      # the not entirely impossible scenario that more than
+      # one thread may call this at the same time. So as not
+      # to completely mess up the transaction log we use
+      # yet another mutux
+      ##
+      @transaction_write.synchronize do
+        @journal_file.puts text
+      end
     end
 
     def setup_journal
@@ -123,32 +171,6 @@ module Smallq
       end
     end
 
-    def take_snapshot
-      @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
-
-      ts = Time.now.strftime('%Y%m%d-%H%M%S')
-
-      filename = "#{@journal_path}/snapshot.#{ts}"
-
-      f = File.new(filename, 'w')
-      t1 = Time.now
-      c = 0
-      @queues.keys.each do |queue_name|
-        @queues[queue_name][QUEUE_DATA].each do |message_id, message|
-          c += 1
-          f.puts "#{message_id} #{queue_name} #{message}"
-        end
-      end
-      t2 = Time.now
-      f.close
-      @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
-
-      @journal_file.close unless @journal_file.nil?
-      filename = "#{@journal_path}/transactions.#{ts}"
-      @journal_file = File.new(filename, 'w')
-      @journal_file.sync = true
-    end
-
     def reload_snapshot
       @logger.log('QMANAGER', 'Read the journal files')
 
@@ -168,13 +190,13 @@ module Smallq
         File.open(transactions, 'r').each do |line|
           message_id, queue_name, message = line.chomp.split(' ')
           if queue_name.nil?
-            if x.key?(message_id)
-              x.delete(message_id)
+            if data.key?(message_id)
+              data.delete(message_id)
             else
               missing_deletes << message_id
             end
           else
-            x[message_id] = [queue_name, message]
+            data[message_id] = [queue_name, message]
           end
         end
       end
@@ -187,6 +209,7 @@ module Smallq
 
       max_message_id = 0
       data.each do |message_id, x|
+        message_id = message_id.to_i
         max_message_id = message_id if message_id > max_message_id
         queue_name, message = x
         insert(queue_name, message_id.to_i, message)
