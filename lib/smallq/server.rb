@@ -70,7 +70,7 @@ module Smallq
                 client.puts 'ERROR UNKNOWN COMMAND'
               end
             rescue => e
-              both(client, 'ERROR', "ERROR #{e}")
+              client.puts "ERROR #{e}"
               e.backtrace.each { |line| puts line }
               break
             end

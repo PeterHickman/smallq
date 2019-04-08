@@ -38,7 +38,7 @@ logger = Logger.new(STDERR)
 
 logger.info "Work limit is #{limit}"
 
-c = mallq::Client.new(config['server'])
+c = Smallq::Client.new(config['server'])
 
 f = 1
 
