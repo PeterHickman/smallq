@@ -70,8 +70,8 @@ module Smallq
                 client.puts 'ERROR UNKNOWN COMMAND'
               end
             rescue => e
-              client.puts "ERROR #{e}"
-              e.backtrace.each { |line| puts line }
+              @logger.log('SERVER', "ERROR #{e}")
+              e.backtrace.each { |line| @logger.log('SERVER', line) }
               break
             end
           end
