@@ -22,11 +22,14 @@ module Smallq
       @journal_file    = nil
 
       @transaction_write = Mutex.new
+      @transaction_in_progress = false
 
       setup_journal
     end
 
     def add(queue_name, message)
+      wait_for_transaction
+
       new_message_id = nil
 
       @queues[queue_name] = [Mutex.new, 0, 0, 0, []] unless @queues.key?(queue_name)
@@ -56,6 +59,8 @@ module Smallq
     end
 
     def get(queue_name)
+      wait_for_transaction
+
       return nil unless @queues.key?(queue_name)
 
       @queues[queue_name][QUEUE_MUTEX].synchronize do
@@ -72,6 +77,8 @@ module Smallq
     end
 
     def stats
+      wait_for_transaction
+
       @queues.map do |queue_name, queue|
         [queue_name, queue[QUEUE_ADDS], queue[QUEUE_GETS], queue[QUEUE_DATA].size, queue[QUEUE_LAST_USED]]
       end
@@ -90,29 +97,37 @@ module Smallq
 
     def take_snapshot
       if @journal_enabled
-        @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+        wait_for_transaction
 
-        ts = Time.now.strftime('%Y%m%d-%H%M%S')
+        @transaction_write.synchronize do
+          @transaction_in_progress = true
 
-        filename = "#{@journal_path}/snapshot.#{ts}"
+          @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
 
-        f = File.new(filename, 'w')
-        t1 = Time.now
-        c = 0
-        @queues.keys.each do |queue_name|
-          @queues[queue_name][QUEUE_DATA].each do |message_id, message|
-            c += 1
-            f.puts "#{message_id} #{queue_name} #{message}"
+          ts = Time.now.strftime('%Y%m%d-%H%M%S')
+
+          filename = "#{@journal_path}/snapshot.#{ts}"
+
+          f = File.new(filename, 'w')
+          t1 = Time.now
+          c = 0
+          @queues.keys.each do |queue_name|
+            @queues[queue_name][QUEUE_DATA].each do |message_id, message|
+              c += 1
+              f.puts "#{message_id} #{queue_name} #{message}"
+            end
           end
-        end
-        t2 = Time.now
-        f.close
-        @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
+          t2 = Time.now
+          f.close
+          @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
 
-        @journal_file.close unless @journal_file.nil?
-        filename = "#{@journal_path}/transactions.#{ts}"
-        @journal_file = File.new(filename, 'w')
-        @journal_file.sync = true
+          @journal_file.close unless @journal_file.nil?
+          filename = "#{@journal_path}/transactions.#{ts}"
+          @journal_file = File.new(filename, 'w')
+          @journal_file.sync = true
+
+          @transaction_in_progress = false
+        end
       else
         @logger.log('QMANAGER', 'Journalling disabled')
       end
@@ -143,7 +158,11 @@ module Smallq
       # yet another mutux
       ##
       @transaction_write.synchronize do
+        @transaction_in_progress = true
+
         @journal_file.puts text
+
+        @transaction_in_progress = false
       end
     end
 
@@ -242,6 +261,12 @@ module Smallq
       others += x
 
       [snapshot, transactions, others]
+    end
+
+    def wait_for_transaction
+      while @transaction_in_progress
+        sleep 0.1
+      end
     end
   end
 end
