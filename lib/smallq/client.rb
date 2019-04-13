@@ -1,4 +1,5 @@
 require 'socket'
+require 'base64'
 
 module Smallq
   class QueueNameInvalidError < StandardError
@@ -15,16 +16,6 @@ module Smallq
       @port = config['port']
 
       @socket = connect
-
-      # begin
-      #   yield self
-      # rescue Interrupt
-      #   # Probably ^C
-      # rescue
-      #   # Probably a bug
-      # end
-      # 
-      # quit
     end
 
     def add(queue_name, message)
@@ -46,6 +37,11 @@ module Smallq
       end
     end
 
+    def add64(queue_name, message)
+      message64 = Base64.strict_encode64(message)
+      add(queue_name, message64)
+    end
+
     def get(queue_name)
       unless valid_queue_name(queue_name)
         raise QueueNameInvalidError
@@ -64,6 +60,14 @@ module Smallq
           { status: x[0], message: x[1..-1].join(' ') }
         end
       end
+    end
+
+    def get64(queue_name)
+      r = get(queue_name)
+      if r[:status] == 'OK'
+        r[:message] = Base64.strict_decode64(r[:message])
+      end
+      r
     end
 
     def stats

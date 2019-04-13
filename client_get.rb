@@ -21,7 +21,7 @@ x = c.get(QUEUE)
 
 until x[:status] == 'ERROR'
   count += 1
-  x = c.get(QUEUE)
+  x = c.get64(QUEUE)
 end
 
 t2 = Time.now
