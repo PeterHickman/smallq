@@ -100,6 +100,11 @@ module Smallq
         @logger.log('HOUSEKEEPING', "Queue [#{queue_name}] deleted. Empty for #{idle_for} seconds")
         @queues.delete(queue_name)
       end
+
+      old_files.each do |old_file|
+        @logger.log('HOUSEKEEPING', "Removing old file #{old_file}")
+        File.delete(old_file)
+      end
     end
 
     def take_snapshot
@@ -268,6 +273,18 @@ module Smallq
       others += x
 
       [snapshot, transactions, others]
+    end
+
+    def old_files
+      files = []
+
+      x = Dir["#{@journal_path}/snapshot.*"].sort
+      files += x[0..-3] if x.size > 2
+
+      x = Dir["#{@journal_path}/transactions.*"].sort
+      files += x[0..-3] if x.size > 2
+
+      files
     end
 
     def wait_for_transaction

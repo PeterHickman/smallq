@@ -6,9 +6,9 @@
 
 ## Server
 * Journalling to recover from crashes
-  * Purge old files with snapshot
+  * <s>Purge old files from journal</s>
   * <s>Mutex to stop transactions being corrupted</s>
   * <s>Write snapshot on server exit</s>
-  * Determine better sleep time for `wait_for_transaction` (config option?)
-  * Some metrics perhaps
+  * <s>Determine better sleep time for `wait_for_transaction`</s>
+  * <s>Some metrics perhaps</s>
 * The server to daemonise
