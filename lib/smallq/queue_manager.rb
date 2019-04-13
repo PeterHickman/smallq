@@ -8,6 +8,11 @@ module Smallq
     QUEUE_LAST_USED=3
     QUEUE_DATA=4
 
+    ##
+    # We need to make sure that there is no transaction in
+    # progress so the wait_for_transaction method sleeps
+    # until @transaction_in_progress is freed
+    ## 
     WAIT_FOR = 0.01
 
     def initialize(config, logger)

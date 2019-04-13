@@ -26,3 +26,4 @@ rescue Interrupt => i
 ensure
   q.take_snapshot
 end
+l.log('SERVER', 'Server terminated')
