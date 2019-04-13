@@ -1,6 +1,6 @@
 # smallq
 
-A classic wheel being reinvented. Queues are nice and all but seem to become massively over-engineered whilst still not allowing you to do quite what you wanted. Think of `SOAP` vs `REST`.`REST` will get the job done but you'll be saddled with `SOAP`
+A classic wheel being reinvented. Queues are nice and all but seem to become massively over-engineered whilst still not allowing you to do quite what you wanted. Think of `SOAP` vs `REST`. `REST` will get the job done but you'll be saddled with `SOAP`
 
 As this is just for myself I asked "How hard can this be?"
 
@@ -18,33 +18,67 @@ For the server to be robust and fast it will do the least to get the job done. A
 
 It means of course that the server is vulnerable to the client getting things wrong. But it is a valid trade-off
 
-## The config file
+## The server configuration file
 
-Everything is configured in the config file. Which is a simple YAML document
+Everything is configured in the config file. Which is a simple YAML document with three sections
 
 ```yaml
 server:
-  host: localhost
-  port: 2000
-  cleanup_every: 15
-  idle_for: 60
+    host: localhost
+    port: 2000
+    cleanup_every: 15
+    idle_for: 60
 logger:
-  enabled: true
-  path: ./server.log
-  console: true
+    enabled: true
+    path: ./server.log
+    console: true
+journal:
+    enabled: true
+    path: ./journal
+    every: 60
 ```
 
-The `server` section is the `host` and `port` that the server will listen on or the client will connect to. A client application need only have 3 lines ...
+### The `server` section
+
+|Field|Values|
+|---|---|
+|`host`|The ip address or hostname of the server|
+|`port`|The port that the server will accept connections on|
+|`cleanup_every`|The housekeeping thread will kick in every `X` seconds|
+|`idle_for`|If housekeeping detects a queue has been empty for `X` seconds or more it will be deleted|
+
+### The `logger` section
+
+|Field|Values|
+|---|---|
+|`enabled`|If `true` logs will be written to the file specified by the subsequent `path`field. If `false` no logging will be recorded|
+|`path`|The filename that the logging will be written to if enabled|
+|`console`|Regardless of the previous settings if `true` log messages will be written to the console|
+
+### The `journal` section
+
+|Field|Value|
+|---|---|
+|`enabled`|To enable journalling set this to `true`|
+|`path`|If enabled journals will be written into this directory|
+|`every`|A journal snapshot will be created every `X` seconds
+
+## The client configuration file
+
+An even simpler YAML document with just one section
 
 ```yaml
 server:
-  host: localhost
-  port: 2000
+    host: localhost
+    port: 2000
 ```
 
-everything else belongs to the server. The `cleanup_every` element is the number of seconds that the house keeping routine will sleep for. In this example it will kick in every 15 seconds and remove empty queues that have not been updated in `idle_for` seconds. Queues can be created on the fly and could, in theory, just build up after use. Only empty queues will be removed
+### The `server` section
 
-The `logger` section is for the server's logging. If `enabled` is `true` then the output will be written to `path`. If `console` is `true` log messages will (also) be written to the console. In the following examples this file is called `smallq.yml`
+|Field|Values|
+|---|---|
+|`host`|The ip address or hostname of the server|
+|`port`|The port that the server will accept connections on|
 
 ## Usage - the server
 
@@ -52,14 +86,18 @@ All you need to do, at this point, is run the server code
 
 	$ ./server.rb smallq.yml
 
+If journalling is enabled and an existing journal is available this will be loaded so that the server can continue where it left off. Likewise should the server crash or be shutdown then it will try and write an journal before quitting. Once running it will take a snapshot of the current state of the system and all subsequent transactions will be written to a transactions file, then every `X` seconds (see the server config file `journal` > `every` setting) and new snapshot will be taken and a new transaction file opened
+
+Old snapshots and transactions will be purged periodically
+
 ## Usage - the client
 #### Queue names
 Messages are added to named queues, the queue will be created once a message is added to it. Gets from non-existant queues will not create the queue. Queue names are 2 to 30 characters long consisting to `a-z`, upper and lower case, `0-9`, `-`, `_` and `.`. The range of valid characters may expand in the future
 
 #### Message body
-The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or encode it with something like `base64` when you add it and unescape or decode when you get it off the queue
+The message itself must be at least 1 character long. There is no upper limit. It can contain anything except `\n`, `\r`, `\f` or `\0`. If you are unsure of your message contents then either escape your message or use the `add64` and `get64` methods that will encode/decode you message with the existing Base64 module
 
-### Add
+### `add` and `add64`
 ```ruby
 require 'smallq/client'
 require 'smallq/config'
@@ -76,7 +114,10 @@ r => {:status=>"OK", :id=>1542545179}
 ```
 
 The `:status` should always be `OK` but check it anyway, the `:id` is the id that the message was given. It could be useful for logging should something go wrong but status is the important part
-### Get
+
+`add64` will encode the message body with the Base64 module. Remember to use the equivalent `get64` method or things will not make a lot of sense
+
+### `get` and `get64`
 ```ruby
 require 'smallq/client'
 require 'smallq/config'
@@ -92,6 +133,9 @@ r = c.get('queue_name')
 r => {:status=>"OK", :id=>1542545179, :message=>"My first message"}
 ```
 If there is something in the queue then `:status` will be `OK`, `:id` will be the same id as was given when the message was added and `:message` will be the original message. If the queue is empty or has not had anything added to it yet then `:status` will be `ERROR` and `:message` will be `QUEUE EMPTY`
+
+Use the `get64` method to decode the messages that were sent with `add64`
+
 ### Stats
 ```ruby
 require 'smallq/client'
