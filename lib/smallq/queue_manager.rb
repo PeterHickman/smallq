@@ -8,6 +8,8 @@ module Smallq
     QUEUE_LAST_USED=3
     QUEUE_DATA=4
 
+    WAIT_FOR = 0.01
+
     def initialize(config, logger)
       @logger = logger
 
@@ -90,7 +92,7 @@ module Smallq
       @queues.each do |queue_name, data|
         next if data[QUEUE_DATA].any?
         next if data[QUEUE_LAST_USED] > cutoff
-        @logger.log('QMANAGER', "Queue [#{queue_name}] deleted. Empty for #{idle_for} seconds")
+        @logger.log('HOUSEKEEPING', "Queue [#{queue_name}] deleted. Empty for #{idle_for} seconds")
         @queues.delete(queue_name)
       end
     end
@@ -102,7 +104,7 @@ module Smallq
         @transaction_write.synchronize do
           @transaction_in_progress = true
 
-          @logger.log('QMANAGER', 'Make a snapshot and start a new journal')
+          @logger.log('SNAPSHOT', 'Make a snapshot and start a new journal')
 
           ts = Time.now.strftime('%Y%m%d-%H%M%S')
 
@@ -119,7 +121,7 @@ module Smallq
           end
           t2 = Time.now
           f.close
-          @logger.log('QMANAGER', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
+          @logger.log('SNAPSHOT', "Snapshot #{filename} written in #{t2 - t1} seconds. #{c} records")
 
           @journal_file.close unless @journal_file.nil?
           filename = "#{@journal_path}/transactions.#{ts}"
@@ -265,7 +267,7 @@ module Smallq
 
     def wait_for_transaction
       while @transaction_in_progress
-        sleep 0.1
+        sleep WAIT_FOR
       end
     end
   end
