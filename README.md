@@ -28,6 +28,7 @@ server:
     port: 2000
     cleanup_every: 15
     idle_for: 60
+    daemon: true
 logger:
     enabled: true
     path: ./server.log
@@ -46,6 +47,7 @@ journal:
 |`port`|The port that the server will accept connections on|
 |`cleanup_every`|The housekeeping thread will kick in every `X` seconds|
 |`idle_for`|If housekeeping detects a queue has been empty for `X` seconds or more it will be deleted|
+|`daemon`|If `true` the process will run in background and override the `logger` settings. `console` will be set to false and `enabled` will be true. Make sure that `path` is a usable value. This way you can find the pid when you need to kill the process
 
 ### The `logger` section
 
