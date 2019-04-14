@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << './lib'
+
+require 'smallq/client'
+require 'smallq/config'
+
+filename = ARGV[0]
+
+config = Smallq::Config.load(filename)
+
+queue_name = ARGV[1]
+
+forever = case ARGV[2]
+          when 'true', 'y', 'yes', '1'
+            true
+          else
+            false
+          end
+            
+client = Smallq::Client.new(config['server'])
+
+if forever
+  puts "Draining queue [#{queue_name}] forever"
+else
+  puts "Draining queue [#{queue_name}] until empty"
+end
+
+loop do
+  x = client.get(queue_name)
+
+  until x[:status] == 'ERROR'
+    x = client.get(queue_name)
+  end
+
+  break unless forever == 'true'
+  sleep 5
+end
