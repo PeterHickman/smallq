@@ -1,12 +1,11 @@
 require 'socket'
-require 'thread'
 
 module Smallq
   class Server
-    MESSAGE_ID=0
-    MESSAGE_BODY=1
+    MESSAGE_ID = 0
+    MESSAGE_BODY = 1
 
-    def initialize(config, logger, qm)
+    def initialize(config, logger, queue_manager)
       @host          = config['host']
       @port          = config['port']
       @cleanup_every = config['cleanup_every']
@@ -14,7 +13,7 @@ module Smallq
 
       @logger = logger
 
-      @qm = qm
+      @queue_manager = queue_manager
 
       @connections = 0
       @connections_mutex = Mutex.new
@@ -27,7 +26,7 @@ module Smallq
 
       Thread.start do
         loop do
-          @qm.house_keeping(@idle_for)
+          @queue_manager.house_keeping(@idle_for)
           sleep @cleanup_every
         end
       end
@@ -46,21 +45,22 @@ module Smallq
             begin
               s = client.gets
               break if s.nil?
+
               m = s.chomp.split(' ', 3)
 
               case m[0]
               when 'ADD'
-                i = @qm.add(m[1], m[2])
+                i = @queue_manager.add(m[1], m[2])
                 client.puts "OK #{i}"
               when 'GET'
-                r = @qm.get(m[1])
+                r = @queue_manager.get(m[1])
                 if r
                   client.puts "OK #{r[MESSAGE_ID]} #{r[MESSAGE_BODY]}"
                 else
                   client.puts 'ERROR QUEUE EMPTY'
                 end
               when 'STATS'
-                @qm.stats.each do |l|
+                @queue_manager.stats.each do |l|
                   client.puts l.join(' ')
                 end
                 client.puts 'OK'

@@ -7,7 +7,7 @@ module Smallq
         raise 'No config file given'
       elsif File.exist?(filename)
         x = YAML.load_file(filename)
-        if x.kind_of?(Hash)
+        if x.is_a?(Hash)
           return x
         else
           raise "The config file [#{filename}] is malformed YAML"

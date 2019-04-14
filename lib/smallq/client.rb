@@ -9,7 +9,7 @@ module Smallq
   end
 
   class Client
-    QUEUE_NAME_REGEX = /\A[a-zA-Z0-9_\-\.]{2,30}\z/
+    QUEUE_NAME_REGEX = /\A[a-zA-Z0-9_\-\.]{2,30}\z/.freeze
 
     def initialize(config)
       @host = config['host']
@@ -19,13 +19,9 @@ module Smallq
     end
 
     def add(queue_name, message)
-      unless valid_queue_name(queue_name)
-        raise QueueNameInvalidError
-      end
+      raise QueueNameInvalidError unless valid_queue_name(queue_name)
 
-      unless validate_message(message)
-        raise MessageInvalidError
-      end
+      raise MessageInvalidError unless validate_message(message)
 
       r = command("ADD #{queue_name} #{message}")
       if r.nil?
@@ -43,9 +39,7 @@ module Smallq
     end
 
     def get(queue_name)
-      unless valid_queue_name(queue_name)
-        raise QueueNameInvalidError
-      end
+      raise QueueNameInvalidError unless valid_queue_name(queue_name)
 
       r = command("GET #{queue_name}")
 
@@ -64,9 +58,9 @@ module Smallq
 
     def get64(queue_name)
       r = get(queue_name)
-      if r[:status] == 'OK'
-        r[:message] = Base64.strict_decode64(r[:message])
-      end
+
+      r[:message] = Base64.strict_decode64(r[:message]) if r[:status] == 'OK'
+
       r
     end
 
@@ -77,7 +71,7 @@ module Smallq
 
       unless r.nil?
         r.each do |x|
-          next if x.index('OK') == 0
+          next if x.index('OK').zero?
 
           x = x.chomp.split(' ')
 
@@ -99,30 +93,17 @@ module Smallq
     end
 
     def command(message)
-      ##
-      # Now try and execute the command
-      ##
-      tries = 3
+      l = []
 
-      while tries != 0
-        begin
-          l = []
-          @socket.puts message
-          while m = @socket.gets
-            l << m
-            break if m.index('OK') == 0
-            break if m.index('ERROR') == 0
-          end
-          tries = 0
-        rescue => e
-          tries -= 1
-          return nil if tries == 0
-          puts 'retry command'
-          sleep 1
-        end
+      @socket.puts message
+
+      while (m = @socket.gets)
+        l << m
+        break if m.index('OK').zero?
+        break if m.index('ERROR').zero?
       end
 
-      return l
+      l
     end
 
     def valid_queue_name(name)
@@ -134,7 +115,7 @@ module Smallq
     end
 
     def validate_message(message)
-      if message.size == 0
+      if message.empty?
         false
       elsif message.include?("\n")
         false

@@ -2,17 +2,17 @@ require 'fileutils'
 
 module Smallq
   class QueueManager
-    QUEUE_MUTEX=0
-    QUEUE_ADDS=1
-    QUEUE_GETS=2
-    QUEUE_LAST_USED=3
-    QUEUE_DATA=4
+    QUEUE_MUTEX = 0
+    QUEUE_ADDS = 1
+    QUEUE_GETS = 2
+    QUEUE_LAST_USED = 3
+    QUEUE_DATA = 4
 
     ##
     # We need to make sure that there is no transaction in
     # progress so the wait_for_transaction method sleeps
     # until @transaction_in_progress is freed
-    ## 
+    ##
     WAIT_FOR = 0.01
 
     def initialize(config, logger)
@@ -97,6 +97,7 @@ module Smallq
       @queues.each do |queue_name, data|
         next if data[QUEUE_DATA].any?
         next if data[QUEUE_LAST_USED] > cutoff
+
         @logger.log('HOUSEKEEPING', "Queue [#{queue_name}] deleted. Empty for #{idle_for} seconds")
         @queues.delete(queue_name)
       end
@@ -155,7 +156,7 @@ module Smallq
       # mutexes or last accessed
       ##
       @queues[queue_name] = [Mutex.new, 0, 0, 0, []] unless @queues.key?(queue_name)
-      
+
       @queues[queue_name][QUEUE_DATA] << [message_id, message]
     end
 
@@ -249,7 +250,7 @@ module Smallq
 
       @logger.log('QMANAGER', "New message id set to #{@message_id}")
 
-      @queues.each do |queue_name, x|
+      @queues.each do |_, x|
         x[QUEUE_LAST_USED] = Time.now.to_i
       end
 
@@ -260,8 +261,6 @@ module Smallq
     end
 
     def existing_snapshots
-      snapshot = nil
-      transactions = nil
       others = []
 
       x = Dir["#{@journal_path}/snapshot.*"].sort
@@ -288,9 +287,7 @@ module Smallq
     end
 
     def wait_for_transaction
-      while @transaction_in_progress
-        sleep WAIT_FOR
-      end
+      sleep WAIT_FOR while @transaction_in_progress
     end
   end
 end

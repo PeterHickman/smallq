@@ -21,7 +21,7 @@ begin
   s.run
 rescue => e
   l.log('SERVER', "Exception: #{e}")
-rescue Interrupt => i
+rescue Interrupt
   l.log('SERVER', 'Server interupted, shutting down')
 ensure
   q.take_snapshot
