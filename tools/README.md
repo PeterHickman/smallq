@@ -1,5 +1,13 @@
 # Tools
 
+## `smallq`
+
+```bash
+$ smallq smallq.yml
+```
+
+Passed a server config file (see the main README.md) it will manage the queues and daemonise if required
+
 ## `qtop`
 
 ```bash
