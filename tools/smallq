@@ -11,11 +11,20 @@ require 'smallq/queue_manager'
 
 filename = ARGV[0]
 
-c = Smallq::Config.load(filename)
+config = Smallq::Config.load(filename)
 
-l = Smallq::Logger.new(c['logger'])
-q = Smallq::QueueManager.new(c['journal'], l)
-s = Smallq::Server.new(c['server'], l, q)
+if config['server']['daemon']
+  config['logger']['console'] = false
+  config['logger']['enabled'] = true
+
+  puts "Server starting daemonised, pid in logfile (logger enabled, console disabled)"
+
+  Process.daemon(true, false)
+end
+
+l = Smallq::Logger.new(config['logger'])
+q = Smallq::QueueManager.new(config['journal'], l)
+s = Smallq::Server.new(config['server'], l, q)
 
 begin
   s.run
@@ -24,6 +33,7 @@ rescue => e
 rescue Interrupt
   l.log('SERVER', 'Server interupted, shutting down')
 ensure
+  l.log('SERVER', 'Final snapshot (if enabled)')
   q.take_snapshot
 end
 l.log('SERVER', 'Server terminated')

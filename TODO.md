@@ -11,4 +11,4 @@
   * <s>Write snapshot on server exit</s>
   * <s>Determine better sleep time for `wait_for_transaction`</s>
   * <s>Some metrics perhaps</s>
-* The server to daemonise
+* <s>The server to daemonise</s>

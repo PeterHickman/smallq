@@ -3,6 +3,7 @@ server:
     port: 2000
     cleanup_every: 15
     idle_for: 60
+    daemon: true
 logger:
     enabled: true
     path: ./server.log
