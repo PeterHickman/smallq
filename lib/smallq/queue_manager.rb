@@ -124,7 +124,7 @@ module Smallq
           f = File.new(filename, 'w')
           t1 = Time.now
           c = 0
-          @queues.keys.each do |queue_name|
+          @queues.each_key do |queue_name|
             @queues[queue_name][QUEUE_DATA].each do |message_id, message|
               c += 1
               f.puts "#{message_id} #{queue_name} #{message}"
