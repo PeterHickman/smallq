@@ -71,7 +71,11 @@ module Smallq
 
       unless r.nil?
         r.each do |x|
-          next if x.index('OK').zero?
+          ##
+          # Do not use .zero? here as .index can return nil
+          # which .zero? does not respond to in the same way
+          ##
+          next if x.index('OK') == 0
 
           x = x.chomp.split(' ')
 
@@ -99,8 +103,13 @@ module Smallq
 
       while (m = @socket.gets)
         l << m
-        break if m.index('OK').zero?
-        break if m.index('ERROR').zero?
+
+        ##
+        # Do not use .zero? here as .index can return nil
+        # which .zero? does not respond to in the same way
+        ##
+        break if m.index('OK') == 0
+        break if m.index('ERROR') == 0
       end
 
       l
