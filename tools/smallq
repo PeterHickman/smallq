@@ -35,5 +35,5 @@ rescue Interrupt
 ensure
   l.log('SERVER', 'Final snapshot (if enabled)')
   q.take_snapshot
+  l.log('SERVER', 'Server terminated')
 end
-l.log('SERVER', 'Server terminated')
