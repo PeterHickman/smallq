@@ -5,12 +5,10 @@ $LOAD_PATH << './lib'
 require 'smallq/client'
 require 'smallq/config'
 
-number_of_messages = ARGV[1].to_i
-
-TEST_MESSAGE = 'Test message'.freeze
 QUEUE = 'test_queue'.freeze
 
 filename = ARGV[0]
+number_of_messages = ARGV[1].to_i
 
 config = Smallq::Config.load(filename)
 
