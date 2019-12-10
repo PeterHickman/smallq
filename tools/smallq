@@ -17,7 +17,7 @@ if config['server']['daemon']
   config['logger']['console'] = false
   config['logger']['enabled'] = true
 
-  puts "Server starting daemonised, pid in logfile (logger enabled, console disabled)"
+  puts 'Server starting daemonised, pid in logfile (logger enabled, console disabled)'
 
   Process.daemon(true, false)
 end
