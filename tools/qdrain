@@ -33,6 +33,6 @@ loop do
     x = client.get(queue_name)
   end
 
-  break unless forever == 'true'
+  break unless forever == true
   sleep 5
 end
