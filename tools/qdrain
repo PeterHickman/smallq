@@ -5,19 +5,16 @@ $LOAD_PATH << './lib'
 require 'smallq/client'
 require 'smallq/config'
 
+TRUE = %w(true y yes 1).freeze
+
 filename = ARGV[0]
 
 config = Smallq::Config.load(filename)
 
 queue_name = ARGV[1]
 
-forever = case ARGV[2]
-          when 'true', 'y', 'yes', '1'
-            true
-          else
-            false
-          end
-            
+forever = TRUE.includes?(ARGV[2])
+
 client = Smallq::Client.new(config['server'])
 
 if forever
