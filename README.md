@@ -88,7 +88,7 @@ All you need to do, at this point, is run the server code
 
 	$ ./smallq smallq.yml
 
-If journalling is enabled and an existing journal is available this will be loaded so that the server can continue where it left off. Likewise should the server crash or be shutdown then it will try and write an journal before quitting. Once running it will take a snapshot of the current state of the system and all subsequent transactions will be written to a transactions file, then every `X` seconds (see the server config file `journal` > `every` setting) and new snapshot will be taken and a new transaction file opened
+If journalling is enabled and an existing journal is available this will be loaded so that the server can continue where it left off. Likewise should the server crash or be shutdown then it will try and write a journal before quitting. Once running it will take a snapshot of the current state of the system and all subsequent transactions will be written to a transactions file, then every `X` seconds (see the server config file `journal` > `every` setting) and new snapshot will be taken and a new transaction file opened
 
 Old snapshots and transactions will be purged periodically
 
